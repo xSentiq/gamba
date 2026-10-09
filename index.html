@@ -8,7 +8,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=4">
+  <script>
+    // set the theme before the page paints (saved choice, otherwise the device setting)
+    (function () { var t = null; try { t = localStorage.getItem("goog-theme"); } catch (e) {}
+      if (t !== "light" && t !== "dark") t = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", t); })();
+  </script>
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
   <header class="top">
@@ -20,6 +26,7 @@
       <a href="#admin" data-view="admin" id="nav-admin" hidden>Admin</a>
     </nav>
     <div class="right">
+      <button id="theme-toggle" type="button" class="theme-btn" aria-label="Switch between light and dark mode" title="Light / dark"></button>
       <span id="balance" class="balance" hidden></span>
       <button id="logout" type="button" class="link" hidden>Log out</button>
     </div>
@@ -493,9 +500,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=4"></script>
-  <script src="games.js?v=4"></script>
-  <script src="games2.js?v=4"></script>
-  <script src="extras.js?v=4"></script>
+  <script src="app.js?v=5"></script>
+  <script src="games.js?v=5"></script>
+  <script src="games2.js?v=5"></script>
+  <script src="extras.js?v=5"></script>
 </body>
 </html>

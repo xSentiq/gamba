@@ -284,3 +284,20 @@
     if (window.GoogExtras) window.GoogExtras.onSession(session);
   });
 })();
+
+
+// ---- light / dark mode toggle ----
+(function () {
+  const btn = document.getElementById("theme-toggle");
+  if (!btn) return;
+  const root = document.documentElement;
+  const paint = () => { btn.textContent = root.getAttribute("data-theme") === "dark" ? "☀" : "☾"; };
+  paint();
+  btn.addEventListener("click", () => {
+    const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("goog-theme", next); } catch (e) {}
+    paint();
+    window.dispatchEvent(new Event("resize")); // canvases redraw with the new colors
+  });
+})();

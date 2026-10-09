@@ -1,21 +1,29 @@
 :root {
-  --paper: #E9EEF2;
-  --surface: #F8FAFB;
-  --ink: #0F1B2D;
-  --muted: #55657A;
-  --line: #C5CFD8;
+  color-scheme: light;
+  --paper: #FFFFFF;
+  --surface: #FFFFFF;
+  --ink: #17121F;
+  --muted: #66607A;
+  --line: #E3E0EC;
   --brass: #C8962E;
   --teal: #1F7A6D;
   --error: #B3261E;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --paper: #0C1522; --surface: #132033; --ink: #E8EEF5; --muted: #93A3B8;
-    --line: #26364D; --brass: #E0AE48; --teal: #4FB5A5; --error: #FF8A80;
-  }
+/* dark: charcoal purple with neon violet, like the visor in the reference */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #1A1424;
+  --bg: linear-gradient(160deg, #15101D 0%, #231A33 50%, #33224D 100%);
+  --surface: #2A2139;
+  --ink: #EFE9F8;
+  --muted: #ADA3C4;
+  --line: #44395B;
+  --brass: #B66BFF;
+  --teal: #46D1B0;
+  --error: #FF7A8A;
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Comic Sans MS", "Comic Sans", "Comic Neue", cursive; line-height: 1.5; }
+body { margin: 0; min-height: 100vh; background: var(--bg, var(--paper)); background-attachment: fixed; color: var(--ink); font-family: "Comic Sans MS", "Comic Sans", "Comic Neue", cursive; line-height: 1.5; }
 h1, h2, .brand, .big { font-family: "Comic Sans MS", "Comic Sans", "Comic Neue", cursive; }
 button { font: inherit; color: inherit; cursor: pointer; }
 a { color: inherit; }
@@ -91,7 +99,7 @@ form small { display: block; margin-top: .25rem; font-weight: 400; color: var(--
 
 /* ---------- games ---------- */
 :root { --win: var(--teal); --lose: color-mix(in srgb, var(--error) 55%, var(--surface)); --cardboard: #B8895A; --cardboard-dark: #8E6538; }
-@media (prefers-color-scheme: dark) { :root { --cardboard: #9C7448; --cardboard-dark: #6F4F2C; } }
+:root[data-theme="dark"] { --cardboard: #6F5A8F; --cardboard-dark: #4A3A66; }
 
 .back { display: inline-block; margin-bottom: 1rem; color: var(--muted); }
 .back:hover { color: var(--ink); }
@@ -327,3 +335,8 @@ select { font: inherit; color: var(--ink); background: var(--paper); border: 1px
 .payline-thumb { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .3rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
 .payline-thumb[aria-pressed="true"] { border-color: var(--brass); box-shadow: 0 0 0 2px var(--brass); }
 .payline-thumb.off { opacity: .35; cursor: default; }
+
+/* theme toggle */
+.theme-btn { background: none; border: 1px solid var(--line); border-radius: 999px; width: 2.2rem; height: 2.2rem; display: inline-grid; place-items: center; font-size: 1.05rem; line-height: 1; color: var(--ink); }
+.theme-btn:hover { border-color: var(--brass); }
+:root[data-theme="dark"] .card { box-shadow: 0 0 0 1px rgba(182,107,255,.08), 0 8px 30px rgba(10,5,20,.35); }
