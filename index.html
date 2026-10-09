@@ -17,12 +17,18 @@
       <a href="#games" data-view="games">Games</a>
       <a href="#board" data-view="board">Leaderboard</a>
       <a href="#profile" data-view="profile">Profile</a>
+      <a href="#admin" data-view="admin" id="nav-admin" hidden>Admin</a>
     </nav>
     <div class="right">
       <span id="balance" class="balance" hidden></span>
       <button id="logout" type="button" class="link" hidden>Log out</button>
     </div>
   </header>
+
+  <div id="rescue-bar" class="rescue-bar" hidden>
+    <span>Almost out of goog?</span>
+    <button id="rescue-open" type="button" class="btn small">Draw a cat for 10 goog</button>
+  </div>
 
   <main>
     <!-- GAMES -->
@@ -33,11 +39,15 @@
         <h1>Games</h1>
         <p class="sub">Bet goog and cash out in time. Every round is decided on the server, so nobody can cheat.</p>
         <div class="hub">
-          <a class="hub-card" href="#games/mines"><span class="hub-icon" aria-hidden="true">📦</span><span class="tag">Mines</span><h2>Cucumber Boxes</h2><p>Open boxes to find cats. Every cat raises your payout. Open a cucumber and the round is over.</p></a>
-          <a class="hub-card" href="#games/crash"><span class="hub-icon" aria-hidden="true">🚀</span><span class="tag">Crash</span><h2>Cat Rocket</h2><p>Your cat flies higher and higher. Cash out before it crashes.</p></a>
-          <a class="hub-card" href="#games/dice"><span class="hub-icon" aria-hidden="true">🎲</span><span class="tag">Dice</span><h2>Cat Dice</h2><p>Pick a target and bet on a roll over or under it. You set the odds.</p></a>
-          <a class="hub-card" href="#games/plinko"><span class="hub-icon" aria-hidden="true">🐱</span><span class="tag">Plinko</span><h2>Cat Drop</h2><p>A cat ball bounces down the pegs into a payout slot. Choose rows and risk.</p></a>
-          <a class="hub-card" href="#games/tap"><span class="hub-icon" aria-hidden="true">🐾</span><span class="tag">Free play</span><h2>Tap the goog</h2><p>Tap the cat as fast as you can. No goog involved.</p></a>
+          <a class="hub-card" href="#games/slots"><img class="hub-cat" src="assets/cats/drooling.jpg" alt=""><span class="tag">Slots</span><h2>Cat Slots</h2><p>Match cats on up to 20 lines. Three drooling cats start free games with double wins.</p></a>
+          <a class="hub-card" href="#games/mines"><img class="hub-cat" src="assets/cats/slotcat_4.jpg" alt=""><span class="tag">Mines</span><h2>Cucumber Boxes</h2><p>Open boxes to find cats. Every cat raises your payout. Open a cucumber and the round is over.</p></a>
+          <a class="hub-card" href="#games/tower"><img class="hub-cat" src="assets/cats/slotcat_3.jpg" alt=""><span class="tag">Tower</span><h2>Cat Tower</h2><p>Climb the cat tree floor by floor. Dodge the spray bottles and cash out whenever you like.</p></a>
+          <a class="hub-card" href="#games/crash"><img class="hub-cat" src="assets/cats/slotcat_6.jpg" alt=""><span class="tag">Crash</span><h2>Cat Rocket</h2><p>Your cat flies higher and higher. Cash out before it crashes.</p></a>
+          <a class="hub-card" href="#games/dice"><img class="hub-cat" src="assets/cats/slotcat_2.jpg" alt=""><span class="tag">Dice</span><h2>Cat Dice</h2><p>Pick a target and bet on a roll over or under it. You set the odds.</p></a>
+          <a class="hub-card" href="#games/plinko"><img class="hub-cat" src="assets/cats/plink.jpg" alt=""><span class="tag">Plinko</span><h2>Cat Drop</h2><p>Plink the cat bounces down the pegs into a payout slot. Choose rows and risk.</p></a>
+          <a class="hub-card" href="#games/roulette"><img class="hub-cat" src="assets/cats/slotcat_1.jpg" alt=""><span class="tag">Roulette</span><h2>Cat Roulette</h2><p>Bet on numbers, colors, dozens and more, then watch the cat settle on the wheel.</p></a>
+          <a class="hub-card" href="#games/scratch"><img class="hub-cat" src="assets/cats/slotcat_5.jpg" alt=""><span class="tag">Scratch</span><h2>Scratch Cards</h2><p>Scratch off nine tiles and match three cats to win.</p></a>
+          <a class="hub-card" href="#games/tap"><img class="hub-cat" src="assets/goog.jpg" alt=""><span class="tag">Free play</span><h2>Tap the goog</h2><p>Tap the cat as fast as you can. No goog involved.</p></a>
         </div>
       </div>
 
@@ -105,7 +115,7 @@
           <p class="dice-number" id="dice-number" aria-live="polite">–</p>
           <div class="dice-stage">
             <div id="dice-track" class="dice-track"></div>
-            <span id="dice-marker" class="dice-marker"><img src="assets/goog.jpg" alt=""></span>
+            <span id="dice-marker" class="dice-marker"><img src="assets/cats/slotcat_2.jpg" alt=""></span>
             <div class="dice-scale"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
           </div>
           <div class="controls">
@@ -165,6 +175,168 @@
         </div>
       </article>
 
+      <!-- Cat Slots -->
+      <article id="game-slots" class="game card" hidden>
+        <h2>Cat Slots</h2>
+        <p id="gate-slots" class="gate">Log in to play with goog. <a href="#profile">Go to login</a></p>
+        <div id="play-slots">
+          <div id="slot-machine" class="slot-machine">
+            <div id="slot-banner" class="slot-banner" hidden></div>
+            <div id="slot-reels" class="slot-reels" role="img" aria-label="Slot machine reels"></div>
+            <p id="slot-win" class="slot-win" aria-live="polite">Press Spin</p>
+          </div>
+          <div class="controls slot-controls">
+            <div class="slot-ctl">
+              <div>
+                <label for="slots-bet">Bet per line</label>
+            <div class="bet">
+              <input id="slots-bet" type="number" min="1" step="1" value="1">
+              <button type="button" class="chip-btn" data-bet-for="slots-bet" data-bet-act="half">½</button>
+              <button type="button" class="chip-btn" data-bet-for="slots-bet" data-bet-act="double">2×</button>
+              <button type="button" class="chip-btn" data-bet-for="slots-bet" data-bet-act="max">Max</button>
+            </div>
+              </div>
+              <div>
+                <label for="slots-lines">Lines: <output id="slots-lines-out">10</output></label>
+                <input id="slots-lines" type="range" min="1" max="20" value="10">
+                <div class="seg" role="group" aria-label="Risk">
+                  <button type="button" data-slot-risk="low" aria-pressed="false">Low risk</button>
+                  <button type="button" data-slot-risk="medium" aria-pressed="true">Medium</button>
+                  <button type="button" data-slot-risk="high" aria-pressed="false">High risk</button>
+                </div>
+              </div>
+            </div>
+            <dl class="readout three">
+              <div><dt>Total bet</dt><dd id="slots-total">10</dd></div>
+              <div><dt>Last win</dt><dd id="slots-lastwin">0</dd></div>
+              <div><dt>Session</dt><dd id="slots-session">0</dd></div>
+            </dl>
+            <div class="slot-buttons">
+              <button id="slots-spin" class="btn big-btn" type="button">Spin</button>
+              <div class="auto">
+                <label for="slots-auto-count">Auto-play</label>
+                <select id="slots-auto-count">
+                  <option value="10">10 spins</option><option value="25">25 spins</option>
+                  <option value="50">50 spins</option><option value="100">100 spins</option>
+                </select>
+                <button id="slots-auto" class="btn alt" type="button">Start auto-play</button>
+              </div>
+            </div>
+            <div class="checks">
+              <label class="check"><input type="checkbox" id="slots-stop-free" checked> Stop when free games start</label>
+              <label class="check"><input type="checkbox" id="slots-stop-big" checked> Stop on a win of 20× the bet or more</label>
+            </div>
+          </div>
+          <details class="paytable">
+            <summary>Paytable and rules</summary>
+            <div id="slots-paytable"></div>
+          </details>
+          <p id="slots-msg" class="status" role="status"></p>
+        </div>
+      </article>
+
+      <!-- Cat Tower -->
+      <article id="game-tower" class="game card" hidden>
+        <h2>Cat Tower</h2>
+        <p id="gate-tower" class="gate">Log in to play with goog. <a href="#profile">Go to login</a></p>
+        <div id="play-tower" class="game-layout">
+          <div class="controls">
+            <label for="tower-bet">Bet</label>
+            <div class="bet">
+              <input id="tower-bet" type="number" min="1" step="1" value="10">
+              <button type="button" class="chip-btn" data-bet-for="tower-bet" data-bet-act="half">½</button>
+              <button type="button" class="chip-btn" data-bet-for="tower-bet" data-bet-act="double">2×</button>
+              <button type="button" class="chip-btn" data-bet-for="tower-bet" data-bet-act="max">Max</button>
+            </div>
+            <label>Difficulty</label>
+            <div id="tower-diff" class="seg wrap" role="group" aria-label="Difficulty">
+              <button type="button" data-diff="easy" aria-pressed="false">Easy</button>
+              <button type="button" data-diff="medium" aria-pressed="true">Medium</button>
+              <button type="button" data-diff="hard" aria-pressed="false">Hard</button>
+              <button type="button" data-diff="expert" aria-pressed="false">Expert</button>
+            </div>
+            <small id="tower-diff-note"></small>
+            <button id="tower-start" class="btn wide" type="button">Start climb</button>
+            <button id="tower-cash" class="btn wide alt" type="button" disabled>Cash out</button>
+            <dl class="readout">
+              <div><dt>Multiplier</dt><dd id="tower-mult">×1.00</dd></div>
+              <div><dt>Next floor</dt><dd id="tower-next">–</dd></div>
+            </dl>
+          </div>
+          <div>
+            <div id="tower-board" class="tower-board"></div>
+            <p id="tower-msg" class="status" role="status"></p>
+          </div>
+        </div>
+      </article>
+
+      <!-- Cat Roulette -->
+      <article id="game-roulette" class="game card" hidden>
+        <h2>Cat Roulette</h2>
+        <p id="gate-roulette" class="gate">Log in to play with goog. <a href="#profile">Go to login</a></p>
+        <div id="play-roulette">
+          <div class="roulette-top">
+            <canvas id="roulette-canvas" class="roulette-canvas" role="img" aria-label="Roulette wheel with a cat ball"></canvas>
+            <div class="roulette-side">
+              <p id="roulette-result" class="roulette-result" aria-live="polite">Place your bets</p>
+              <div id="roulette-history" class="recent" aria-label="Recent numbers"></div>
+              <label>Chip value</label>
+              <div id="roulette-chips" class="seg wrap" role="group" aria-label="Chip value">
+                <button type="button" data-chip="1" aria-pressed="false">1</button>
+                <button type="button" data-chip="5" aria-pressed="true">5</button>
+                <button type="button" data-chip="25" aria-pressed="false">25</button>
+                <button type="button" data-chip="100" aria-pressed="false">100</button>
+                <button type="button" data-chip="500" aria-pressed="false">500</button>
+              </div>
+              <dl class="readout">
+                <div><dt>Total bet</dt><dd id="roulette-total">0</dd></div>
+                <div><dt>Bets placed</dt><dd id="roulette-count">0</dd></div>
+              </dl>
+              <button id="roulette-spin" class="btn wide" type="button" disabled>Spin</button>
+              <div class="row-btns">
+                <button id="roulette-undo" class="link" type="button">Undo</button>
+                <button id="roulette-clear" class="link" type="button">Clear</button>
+                <button id="roulette-repeat" class="link" type="button">Repeat last</button>
+              </div>
+            </div>
+          </div>
+          <div id="roulette-board" class="roulette-board" role="group" aria-label="Betting table"></div>
+          <p class="sub small">Single zero wheel. Straight numbers pay 35 to 1, dozens and columns 2 to 1, everything else 1 to 1.</p>
+          <p id="roulette-msg" class="status" role="status"></p>
+        </div>
+      </article>
+
+      <!-- Scratch Cards -->
+      <article id="game-scratch" class="game card" hidden>
+        <h2>Scratch Cards</h2>
+        <p id="gate-scratch" class="gate">Log in to play with goog. <a href="#profile">Go to login</a></p>
+        <div id="play-scratch" class="game-layout">
+          <div class="controls">
+            <label>Card price</label>
+            <div id="scratch-price" class="seg wrap" role="group" aria-label="Card price">
+              <button type="button" data-price="1" aria-pressed="false">1</button>
+              <button type="button" data-price="5" aria-pressed="true">5</button>
+              <button type="button" data-price="25" aria-pressed="false">25</button>
+              <button type="button" data-price="100" aria-pressed="false">100</button>
+            </div>
+            <button id="scratch-buy" class="btn wide" type="button">Buy a card</button>
+            <button id="scratch-reveal" class="btn wide alt" type="button" disabled>Reveal all</button>
+            <details class="paytable" open>
+              <summary>Prizes</summary>
+              <p class="sub small">Find 3 of the same cat. The prize is a multiple of the card price.</p>
+              <div id="scratch-prizes"></div>
+            </details>
+          </div>
+          <div>
+            <div id="scratch-card" class="scratch-card">
+              <div id="scratch-grid" class="scratch-grid"></div>
+              <canvas id="scratch-canvas" class="scratch-canvas" aria-label="Scratch surface"></canvas>
+            </div>
+            <p id="scratch-msg" class="status" role="status"></p>
+          </div>
+        </div>
+      </article>
+
       <!-- Tap the goog (free play) -->
       <article id="game-tap" class="game card" hidden>
         <h2>Tap the goog</h2>
@@ -175,7 +347,7 @@
           <span>Best <strong id="g-best">0</strong></span>
         </div>
         <div id="arena" class="arena">
-          <button id="g-target" class="target" type="button" aria-label="Tap the goog" hidden><img src="assets/goog.jpg" alt=""></button>
+          <button id="g-target" class="target" type="button" aria-label="Tap the goog" hidden><img src="assets/cats/slotcat_1.jpg" alt=""></button>
           <button id="g-start" class="btn" type="button">Start</button>
         </div>
         <p id="g-msg" class="status" role="status"></p>
@@ -238,11 +410,84 @@
         <p id="me-status" class="status" role="status"></p>
       </div>
     </section>
+
+    <!-- ADMIN -->
+    <section id="view-admin" hidden>
+      <h1>Admin</h1>
+      <dl class="readout four" id="admin-stats">
+        <div><dt>Players</dt><dd id="st-players">–</dd></div>
+        <div><dt>goog in play</dt><dd id="st-goog">–</dd></div>
+        <div><dt>Banned</dt><dd id="st-banned">–</dd></div>
+        <div><dt>Drawings to review</dt><dd id="st-pending">–</dd></div>
+      </dl>
+      <div class="tabs" role="tablist">
+        <button id="atab-players" type="button" role="tab" aria-selected="true">Players</button>
+        <button id="atab-drawings" type="button" role="tab" aria-selected="false">Drawings</button>
+        <button id="atab-log" type="button" role="tab" aria-selected="false">Log</button>
+      </div>
+
+      <div id="apanel-players">
+        <form id="admin-search" class="admin-bar">
+          <input id="admin-q" type="search" placeholder="Search username" aria-label="Search username">
+          <button class="btn" type="submit">Search</button>
+        </form>
+        <form id="admin-everyone" class="admin-bar">
+          <input id="admin-everyone-amt" type="number" min="1" max="100000" placeholder="goog" aria-label="goog for everyone">
+          <button class="btn alt" type="submit">Give to everyone</button>
+        </form>
+        <div class="ledger-wrap">
+          <table class="ledger admin-table">
+            <thead><tr><th scope="col">Player</th><th scope="col" class="num">goog</th><th scope="col">Change goog</th><th scope="col">Account</th></tr></thead>
+            <tbody id="admin-users"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="apanel-drawings" hidden>
+        <p class="sub">Approve keeps the goog. Reject takes it back. New drawings are also e-mailed if you set that up.</p>
+        <div class="seg" role="group" aria-label="Drawing filter">
+          <button type="button" data-dfilter="pending" aria-pressed="true">Pending</button>
+          <button type="button" data-dfilter="all" aria-pressed="false">All</button>
+        </div>
+        <div id="admin-drawings" class="drawing-grid"></div>
+      </div>
+
+      <div id="apanel-log" hidden>
+        <ul id="admin-log" class="log-list"></ul>
+      </div>
+      <p id="admin-msg" class="status" role="status"></p>
+    </section>
   </main>
+
+  <!-- Draw a cat -->
+  <dialog id="draw-dialog" class="draw-dialog" aria-labelledby="draw-title">
+    <h2 id="draw-title">Draw a cat, get 10 goog</h2>
+    <p class="sub">Keep it simple, but make it look like a cat. Your drawing is saved and sent to the admin. If it is not drawn well enough, the goog may be taken away again.</p>
+    <canvas id="draw-canvas" class="draw-canvas" width="320" height="320" aria-label="Drawing area"></canvas>
+    <div class="draw-tools">
+      <div id="draw-colors" class="swatches" role="group" aria-label="Color"></div>
+      <div id="draw-sizes" class="seg" role="group" aria-label="Brush size">
+        <button type="button" data-size="3" aria-pressed="false">Thin</button>
+        <button type="button" data-size="7" aria-pressed="true">Medium</button>
+        <button type="button" data-size="14" aria-pressed="false">Thick</button>
+      </div>
+      <button id="draw-undo" class="link" type="button">Undo</button>
+      <button id="draw-clear" class="link" type="button">Clear</button>
+    </div>
+    <p id="draw-msg" class="status" role="status"></p>
+    <div class="draw-actions">
+      <button id="draw-cancel" class="link" type="button">Cancel</button>
+      <button id="draw-send" class="btn" type="button" disabled>Send drawing and get 10 goog</button>
+    </div>
+  </dialog>
+
+  <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
   <script src="app.js"></script>
   <script src="games.js"></script>
+  <script src="games2.js"></script>
+  <script src="extras.js"></script>
 </body>
 </html>

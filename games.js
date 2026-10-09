@@ -5,8 +5,8 @@
   const $ = (id) => document.getElementById(id);
   const { db, fmt } = G;
 
-  const PANELS = ["mines", "crash", "dice", "plinko", "tap"];
-  const BET_PANELS = ["mines", "crash", "dice", "plinko"];
+  const PANELS = ["mines", "crash", "dice", "plinko", "slots", "tower", "roulette", "scratch", "tap"];
+  const BET_PANELS = ["mines", "crash", "dice", "plinko", "slots", "tower", "roulette", "scratch"];
   const setMsg = (id, text, kind = "") => G.setStatus($(id), text, kind);
 
   // ---------- shared ----------
@@ -35,9 +35,11 @@
     input.dispatchEvent(new Event("input"));
   });
 
-  const catFace = () => { const img = new Image(); img.src = "assets/goog.jpg"; img.alt = "Cat"; return img; };
-  const catImg = new Image();
-  catImg.src = "assets/goog.jpg";
+  // Every game uses the slot cats; Plink belongs to Plinko only (the drooling cat belongs to the slot machine).
+  const catFace = () => { const img = new Image(); img.src = G.randCat(); img.alt = "Cat"; return img; };
+  const crashCat = new Image();                    // the cat that flies the rocket; a new one each flight
+  const plinkCat = new Image();
+  plinkCat.src = "assets/cats/plink.jpg";
 
   const cssColors = () => {
     const cs = getComputedStyle(document.documentElement);
@@ -178,6 +180,7 @@
   // =====================================================================
   // Cat Rocket (crash)
   // =====================================================================
+  crashCat.src = G.catUrl(1);
   const crashCanvas = $("crash-canvas");
   let cDims = null;
   const C = { running: false, t0: 0, rate: 0.09, auto: null, shown: 1, raf: 0, poll: 0, bet: 0, end: null, endAt: 0, endT: 0, busy: false };
@@ -185,7 +188,8 @@
 
   function resizeCrash() { const d = sizeCanvas(crashCanvas); if (d) { cDims = d; drawCrash(); } }
   window.addEventListener("resize", () => { if (activeSub === "crash") resizeCrash(); if (activeSub === "plinko") resizePlinko(); });
-  catImg.addEventListener("load", () => { if (activeSub === "crash") drawCrash(); if (activeSub === "plinko") drawPlinko(); });
+  crashCat.addEventListener("load", () => { if (activeSub === "crash") drawCrash(); });
+  plinkCat.addEventListener("load", () => { if (activeSub === "plinko") drawPlinko(); });
 
   const niceStep = (raw) => [0.25, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500].find((s) => s >= raw) || 1000;
 
@@ -233,7 +237,7 @@
       ctx.save();
       ctx.translate(tx, cy); ctx.rotate(rot);
       ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI * 2); ctx.clip();
-      if (catImg.complete && catImg.naturalWidth) ctx.drawImage(catImg, -17, -17, 34, 34);
+      if (crashCat.complete && crashCat.naturalWidth) ctx.drawImage(crashCat, -17, -17, 34, 34);
       ctx.restore();
       ctx.beginPath(); ctx.arc(tx, cy, 17, 0, Math.PI * 2);
       ctx.strokeStyle = k.brass; ctx.lineWidth = 2.5; ctx.stroke();
@@ -272,6 +276,7 @@
     // the server clock is about half a round trip ahead of the moment the reply arrived
     C.t0 = (sentAt + performance.now()) / 2 - s.elapsed_ms;
     C.bet = s.bet; C.running = true; C.end = null; C.shown = 1;
+    crashCat.src = G.randCat();
     setCrashButtons(true);
     C.raf = requestAnimationFrame(crashLoop);
     C.poll = setInterval(pollCrash, 400);
@@ -387,6 +392,7 @@
       const c = diceCalc();
       const res = await rpc("play_dice", { p_bet: bet, p_target: c.target, p_over: diceOver });
       const marker = $("dice-marker");
+      marker.firstElementChild.src = G.randCat();
       marker.classList.add("rolled");
       marker.style.left = "calc(1.4rem + (100% - 2.8rem) * " + res.roll / 100 + ")";
       $("dice-number").className = "dice-number";
@@ -465,7 +471,7 @@
       ctx.save();
       ctx.translate(PL.ball.x, PL.ball.y);
       ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.clip();
-      if (catImg.complete && catImg.naturalWidth) ctx.drawImage(catImg, -r, -r, 2 * r, 2 * r);
+      if (plinkCat.complete && plinkCat.naturalWidth) ctx.drawImage(plinkCat, -r, -r, 2 * r, 2 * r);
       ctx.restore();
       ctx.beginPath(); ctx.arc(PL.ball.x, PL.ball.y, r, 0, Math.PI * 2);
       ctx.strokeStyle = k.brass; ctx.lineWidth = 2; ctx.stroke();
@@ -552,6 +558,7 @@
 
   function moveTarget() {
     const arena = $("arena"), t = $("g-target");
+    t.firstElementChild.src = G.randCat();
     t.style.left = Math.random() * (arena.clientWidth - t.offsetWidth) + "px";
     t.style.top = Math.random() * (arena.clientHeight - t.offsetHeight) + "px";
   }
@@ -608,9 +615,14 @@
     BET_PANELS.forEach((p) => { $("gate-" + p).hidden = li; $("play-" + p).hidden = !li; });
   }
 
+  // games2.js registers the slot machine, tower, roulette and scratch cards here
+  const plugins = {};
+  function register(name, handlers) { plugins[name] = handlers; }
+
   function leave() {
     stopCrashTimers();   // an unfinished flight keeps running on the server; it resumes when you return
     tapStop();
+    Object.values(plugins).forEach((p) => p.leave && p.leave());
   }
 
   function show(sub) {
@@ -621,13 +633,14 @@
     leave();
     applyGates();
     if (!G.loggedIn()) { renderMines(null); crashIdle(); return; }
+    if (plugins[activeSub]) plugins[activeSub].show();
     if (activeSub === "mines") minesResume();
     if (activeSub === "crash") crashResume();
     if (activeSub === "dice") diceRender();
     if (activeSub === "plinko") { resizePlinko(); plinkoLoadTable(); }
   }
 
-  window.GoogGames = { show, leave, refresh: () => show(activeSub) };
+  window.GoogGames = { show, leave, register, refresh: () => show(activeSub), shared: { cssColors, sizeCanvas } };
   diceRender();
   renderMines(null);
 })();

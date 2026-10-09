@@ -43,16 +43,41 @@
     return img;
   }
 
-  // Shared with games.js
+  // ---------- cats (the slot cats are used by all games) ----------
+  const CAT_COUNT = 6;
+  const catUrl = (i) => "assets/cats/slotcat_" + i + ".jpg";
+  const randCat = () => catUrl(1 + Math.floor(Math.random() * CAT_COUNT));
+
+  // ---------- toasts ----------
+  function toast(msg, kind = "") {
+    const box = $("toasts");
+    if (!box) return;
+    const t = document.createElement("div");
+    t.className = "toast " + kind;
+    t.textContent = msg;
+    box.appendChild(t);
+    setTimeout(() => t.remove(), 5000);
+  }
+
+  async function rpc(name, args) {
+    const { data, error } = await db.rpc(name, args || {});
+    if (error) throw new Error(error.message);
+    return data;
+  }
+
+  // Shared with games.js, games2.js and extras.js
   window.Goog = {
-    db, fmt, googIcon, setStatus,
+    db, fmt, googIcon, setStatus, toast, rpc, catUrl, randCat, CAT_COUNT, makeAvatar,
     me: () => me,
     loggedIn: () => !!session,
-    setBalance(n) { if (me) { me.goog = n; renderNav(); } },
+    setBalance(n) {
+      if (me) { me.goog = n; renderNav(); }
+      if (window.GoogExtras) window.GoogExtras.balanceChanged(n);
+    },
   };
 
   // ---------- routing:  #games, #games/mines, #board, #profile ----------
-  const VIEWS = ["games", "board", "profile"];
+  const VIEWS = ["games", "board", "profile", "admin"];
   let current = null;
   function route() {
     const [v, sub] = location.hash.slice(1).split("/");
@@ -68,6 +93,7 @@
     else if (window.GoogGames) window.GoogGames.leave();
     if (name === "board") loadBoard();
     if (name === "profile") renderProfile();
+    if (name === "admin" && window.GoogAdmin) window.GoogAdmin.show();
   }
   window.addEventListener("hashchange", route);
 
@@ -241,6 +267,7 @@
     setTimeout(async () => {
       await loadMe();
       renderNav();
+      if (window.GoogExtras) window.GoogExtras.onSession(s);
       if (current === "profile") renderProfile();
       if (current === "board") loadBoard();
       if (current === "games" && window.GoogGames) window.GoogGames.refresh();
@@ -254,5 +281,6 @@
     await loadMe();
     renderNav();
     route();
+    if (window.GoogExtras) window.GoogExtras.onSession(session);
   });
 })();

@@ -177,3 +177,142 @@ form small { display: block; margin-top: .25rem; font-weight: 400; color: var(--
 
 @media (prefers-reduced-motion: reduce) { .box, .box.safe img, .dice-marker, .hub-card { animation: none; transition: none; } }
 @media (prefers-reduced-motion: no-preference) { .btn, .link, #nav a { transition: opacity .15s, color .15s; } }
+
+/* ---------- v3: more games, extras, admin ---------- */
+.hub-cat { display: block; width: 3.2rem; height: 3.2rem; margin-bottom: .6rem; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px var(--brass); }
+.sub.small { font-size: .85rem; margin: .5rem 0 0; }
+.btn.small { padding: .35rem .8rem; font-size: .9rem; }
+.btn.alt:hover { opacity: .9; }
+.seg.wrap { flex-wrap: wrap; }
+.seg.wrap button { flex: 1 1 4.2rem; }
+select { font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: .5rem .6rem; }
+.check { display: flex; align-items: center; gap: .5rem; font-weight: 400 !important; margin: .35rem 0 0 !important; }
+.check input { width: auto; margin: 0; accent-color: var(--brass); }
+.row-btns { display: flex; gap: .4rem; margin-top: .4rem; flex-wrap: wrap; }
+.paytable { margin-top: 1rem; border: 1px solid var(--line); border-radius: 8px; padding: .6rem .9rem; background: var(--paper); }
+.paytable summary { cursor: pointer; font-weight: 600; }
+.pay-table { width: 100%; border-collapse: collapse; margin-top: .6rem; font-variant-numeric: tabular-nums; }
+.pay-table th, .pay-table td { padding: .3rem .5rem; text-align: left; border-top: 1px solid var(--line); }
+.pay-table th { color: var(--muted); font-weight: 600; }
+.pay-table img { width: 2rem; height: 2rem; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: .5rem; }
+.pay-table td.num, .pay-table th.num { text-align: right; }
+
+/* toasts + rescue bar */
+.toasts { position: fixed; left: 50%; bottom: 1rem; transform: translateX(-50%); display: grid; gap: .5rem; z-index: 50; width: min(26rem, calc(100vw - 2rem)); pointer-events: none; }
+.toast { background: var(--ink); color: var(--paper); padding: .7rem 1rem; border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,.25); font-weight: 600; }
+.toast.ok { background: var(--teal); color: #fff; }
+.toast.error { background: var(--error); color: #fff; }
+.rescue-bar { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: .6rem 1rem; background: color-mix(in srgb, var(--brass) 24%, var(--paper)); border-bottom: 1px solid var(--brass); }
+
+/* ---------- Cat Slots ---------- */
+.slot-machine { position: relative; padding: 1rem; border: 3px solid var(--brass); border-radius: 14px; background: var(--paper); max-width: 40rem; margin: 0 auto; }
+.slot-machine.free { border-color: var(--teal); background: color-mix(in srgb, var(--teal) 14%, var(--paper)); }
+.slot-banner { display: flex; align-items: center; gap: .8rem; margin-bottom: .8rem; padding: .5rem .8rem; border-radius: 10px; background: var(--teal); color: #fff; font-weight: 600; }
+.slot-banner img { width: 3rem; height: 3rem; border-radius: 50%; object-fit: cover; flex: none; }
+.slot-reels { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem; }
+.cell { position: relative; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--surface); border: 2px solid var(--line); }
+.cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cell[data-sym="7"], .cell[data-sym="8"] { border-color: var(--brass); }
+.cell[data-sym="7"]::after, .cell[data-sym="8"]::after { position: absolute; left: 0; right: 0; bottom: 0; padding: .05rem 0; text-align: center; font-size: .7rem; font-weight: 800; background: var(--brass); color: #0F1B2D; }
+.cell[data-sym="7"]::after { content: "Wild"; }
+.cell[data-sym="8"]::after { content: "Bonus"; background: var(--teal); color: #fff; }
+.cell.spinning img { filter: blur(2px) saturate(.8); transform: scale(1.05); }
+.cell.win { border-color: var(--brass); box-shadow: 0 0 0 3px var(--brass), 0 0 14px color-mix(in srgb, var(--brass) 60%, transparent); z-index: 1; }
+.cell.dim { opacity: .45; }
+.slot-win { text-align: center; margin: .8rem 0 0; font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 1.4rem; min-height: 2rem; font-variant-numeric: tabular-nums; }
+.slot-win.big { color: var(--teal); }
+.slot-controls { margin-top: 1rem; }
+.slot-ctl { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+@media (max-width: 640px) { .slot-ctl { grid-template-columns: 1fr; } }
+.slot-buttons { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 1rem; margin-top: 1rem; }
+.auto { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.auto label { margin: 0 !important; }
+.checks { margin-top: .6rem; }
+
+/* ---------- Cat Tower ---------- */
+.tower-board { display: grid; gap: .45rem; max-width: 30rem; }
+.tower-row { display: grid; grid-template-columns: 4.6rem 1fr; gap: .6rem; align-items: center; opacity: .55; }
+.tower-row.current, .tower-row.cleared, .tower-row.over { opacity: 1; }
+.tower-mult { text-align: right; font-weight: 800; font-family: "Bricolage Grotesque", sans-serif; font-variant-numeric: tabular-nums; color: var(--muted); }
+.tower-row.current .tower-mult { color: var(--ink); }
+.tower-row.cleared .tower-mult { color: var(--teal); }
+.tower-tiles { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: .4rem; }
+.t-tile { height: 3.1rem; padding: 0; border: 0; border-radius: 8px; overflow: hidden; display: grid; place-items: center; font-size: 1.5rem; background: var(--cardboard); box-shadow: inset 0 -5px 0 var(--cardboard-dark); }
+.t-tile:not(:disabled) { cursor: pointer; }
+.t-tile:not(:disabled):hover { filter: brightness(1.12); }
+.tower-row.current .t-tile { outline: 2px solid var(--brass); outline-offset: 1px; }
+.t-tile.safe { background: var(--surface); box-shadow: none; outline: 2px solid var(--teal); outline-offset: -2px; }
+.t-tile.trap { background: color-mix(in srgb, var(--error) 14%, var(--surface)); box-shadow: none; outline: 2px solid var(--error); outline-offset: -2px; }
+.t-tile.trap.hit { background: color-mix(in srgb, var(--error) 35%, var(--surface)); }
+.t-tile.ghost { background: var(--surface); box-shadow: none; opacity: .5; }
+.t-tile img { width: 2.5rem; height: 2.5rem; border-radius: 50%; object-fit: cover; display: block; }
+
+/* ---------- Cat Roulette ---------- */
+.roulette-top { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+@media (max-width: 700px) { .roulette-top { grid-template-columns: 1fr; } }
+.roulette-canvas { display: block; width: 100%; max-width: 20rem; aspect-ratio: 1; margin: 0 auto; }
+.roulette-result { font-family: "Bricolage Grotesque", sans-serif; font-weight: 800; font-size: 1.5rem; margin: 0 0 .5rem; min-height: 2.2rem; }
+.roulette-side label { display: block; font-weight: 600; margin: .8rem 0 .3rem; }
+.roulette-board { display: grid; grid-template-columns: 2.6rem repeat(12, minmax(2.1rem, 1fr)) 2.8rem; gap: 3px; margin-top: 1rem; overflow-x: auto; min-width: 0; }
+.rb { position: relative; min-height: 2.5rem; padding: 0 .2rem; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); font-weight: 700; font-size: .9rem; font-variant-numeric: tabular-nums; }
+.rb.red { background: #B3261E; color: #fff; border-color: #8f1d17; }
+.rb.black { background: #1b2433; color: #fff; border-color: #0b111b; }
+.rb.green { background: #1F7A6D; color: #fff; border-color: #17594f; }
+.rb:hover { outline: 2px solid var(--brass); outline-offset: -2px; }
+.rb.won { outline: 3px solid var(--brass); outline-offset: -3px; }
+.rb .stack { position: absolute; right: -2px; top: -4px; min-width: 1.4rem; padding: 0 .3rem; border-radius: 999px; background: var(--brass); color: #0F1B2D; font-size: .7rem; font-weight: 800; line-height: 1.3rem; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+.rb.zero { grid-column: 1; grid-row: 1 / span 3; }
+.rb.colbet { grid-column: 14; }
+.rb.dozen { grid-row: 4; }
+.rb.outside { grid-row: 5; }
+
+/* ---------- Scratch cards ---------- */
+.scratch-card { position: relative; max-width: 22rem; border: 3px solid var(--brass); border-radius: 14px; overflow: hidden; background: var(--paper); touch-action: none; }
+.scratch-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .45rem; padding: .8rem; }
+.s-cell { aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--surface); border: 2px solid var(--line); display: grid; place-items: center; color: var(--muted); font-weight: 800; font-size: 1.6rem; }
+.s-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.s-cell.win { border-color: var(--brass); box-shadow: 0 0 0 3px var(--brass); }
+.scratch-canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+.scratch-canvas.done { pointer-events: none; opacity: 0; transition: opacity .4s; }
+.prize-row { display: flex; align-items: center; gap: .6rem; padding: .3rem 0; border-top: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.prize-row:first-child { border-top: 0; }
+.prize-row img { width: 2rem; height: 2rem; border-radius: 50%; object-fit: cover; flex: none; }
+.prize-row .prize { font-weight: 800; font-size: 1.05rem; }
+.prize-row .odds { margin-left: auto; color: var(--muted); font-size: .85rem; white-space: nowrap; }
+
+/* ---------- draw a cat ---------- */
+.draw-dialog { width: min(26rem, 94vw); padding: 1.2rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); }
+.draw-dialog::backdrop { background: rgba(5, 10, 20, .6); }
+.draw-dialog h2 { margin-bottom: .3rem; }
+.draw-canvas { display: block; width: 100%; aspect-ratio: 1; background: #fff; border: 2px solid var(--line); border-radius: 8px; touch-action: none; cursor: crosshair; }
+.draw-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin-top: .6rem; }
+.draw-tools .seg { margin-top: 0; }
+.swatches { display: flex; gap: .35rem; }
+.swatch { width: 1.8rem; height: 1.8rem; border-radius: 50%; border: 2px solid var(--line); padding: 0; }
+.swatch[aria-pressed="true"] { outline: 3px solid var(--brass); outline-offset: 2px; }
+.draw-actions { display: flex; justify-content: flex-end; align-items: center; gap: .8rem; margin-top: .6rem; }
+
+/* ---------- admin ---------- */
+.readout.four { grid-template-columns: repeat(4, 1fr); margin: 0 0 1.2rem; }
+@media (max-width: 640px) { .readout.four { grid-template-columns: 1fr 1fr; } }
+.admin-bar { display: flex; gap: .5rem; margin-bottom: .8rem; flex-wrap: wrap; }
+.admin-bar input { flex: 1 1 10rem; min-width: 0; padding: .55rem .7rem; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; }
+.admin-table td { vertical-align: middle; }
+.admin-table .adj { display: flex; gap: .3rem; flex-wrap: wrap; }
+.admin-table .adj input { width: 5rem; padding: .3rem .4rem; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; }
+.admin-table .adj button, .admin-table button.mini { padding: .25rem .55rem; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); font-weight: 600; font-size: .85rem; }
+.admin-table .adj button:hover, .admin-table button.mini:hover { border-color: var(--brass); }
+.badge { display: inline-block; margin-left: .4rem; padding: 0 .45rem; border-radius: 999px; font-size: .75rem; font-weight: 700; border: 1px solid var(--line); color: var(--muted); }
+.badge.bad { border-color: var(--error); color: var(--error); }
+.badge.ok { border-color: var(--teal); color: var(--teal); }
+.drawing-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+.drawing { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: .7rem; }
+.drawing img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 6px; }
+.drawing p { margin: .5rem 0; font-size: .9rem; color: var(--muted); }
+.drawing .row-btns { margin-top: .3rem; }
+.log-list { list-style: none; padding: 0; margin: 1rem 0 0; }
+.log-list li { padding: .5rem 0; border-top: 1px solid var(--line); font-size: .92rem; }
+.log-list li:first-child { border-top: 0; }
+.log-list time { color: var(--muted); margin-right: .5rem; }
+
+@media (prefers-reduced-motion: reduce) { .toast, .scratch-canvas.done { transition: none; animation: none; } }
