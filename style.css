@@ -316,3 +316,14 @@ select { font: inherit; color: var(--ink); background: var(--paper); border: 1px
 .log-list time { color: var(--muted); margin-right: .5rem; }
 
 @media (prefers-reduced-motion: reduce) { .toast, .scratch-canvas.done { transition: none; animation: none; } }
+
+/* payline viewer */
+.hint { color: var(--muted); font-size: .9rem; margin: .5rem 0; }
+.payline-main { max-width: 22rem; margin: .5rem auto; }
+.payline-main svg, .payline-thumb svg { display: block; width: 100%; height: auto; }
+.pl-cell { fill: var(--surface); stroke: var(--line); stroke-width: .03; }
+.pl-line { fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: .9; }
+.payline-thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(4.2rem, 1fr)); gap: .5rem; margin-top: .75rem; }
+.payline-thumb { display: flex; flex-direction: column; align-items: center; gap: .15rem; padding: .3rem; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.payline-thumb[aria-pressed="true"] { border-color: var(--brass); box-shadow: 0 0 0 2px var(--brass); }
+.payline-thumb.off { opacity: .35; cursor: default; }

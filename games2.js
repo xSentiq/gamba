@@ -96,7 +96,62 @@
   }
 
   function slotTotal() { return (Math.floor(Number($("slots-bet").value)) || 0) * Number($("slots-lines").value); }
+  // ---- payline viewer ----
+  const lineColor = (i) => "hsl(" + Math.round((i * 137.5) % 360) + " 70% 50%)";
+  function lineSvg(idx, opts) {
+    const NS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "0 0 5 3");
+    svg.setAttribute("aria-hidden", "true");
+    for (let r = 0; r < 5; r++) for (let w = 0; w < 3; w++) {
+      const c = document.createElementNS(NS, "rect");
+      c.setAttribute("x", r + 0.06); c.setAttribute("y", w + 0.06);
+      c.setAttribute("width", 0.88); c.setAttribute("height", 0.88); c.setAttribute("rx", 0.12);
+      c.setAttribute("class", "pl-cell");
+      svg.appendChild(c);
+    }
+    idx.forEach((i) => {
+      const pl = document.createElementNS(NS, "polyline");
+      pl.setAttribute("points", LINES[i].map((row, reel) => (reel + 0.5) + "," + (row + 0.5)).join(" "));
+      pl.setAttribute("class", "pl-line");
+      pl.setAttribute("stroke", lineColor(i));
+      pl.setAttribute("stroke-width", opts.thick);
+      svg.appendChild(pl);
+      const d = document.createElementNS(NS, "circle");
+      d.setAttribute("cx", 0.5); d.setAttribute("cy", LINES[i][0] + 0.5); d.setAttribute("r", opts.thick * 0.9);
+      d.setAttribute("fill", lineColor(i));
+      svg.appendChild(d);
+    });
+    return svg;
+  }
+  S.plSel = 0; // 0 = show all active lines, otherwise a single line number
+  function renderPaylines() {
+    const n = Number($("slots-lines").value);
+    $("slots-lines-n").textContent = n; $("slots-lines-n2").textContent = n;
+    const main = $("payline-main"), th = $("payline-thumbs");
+    if (S.plSel > n) S.plSel = 0;
+    const show = S.plSel ? [S.plSel - 1] : Array.from({ length: n }, (_, i) => i);
+    main.replaceChildren(lineSvg(show, { thick: S.plSel ? 0.1 : 0.06 }));
+    if (!th.children.length) {
+      for (let i = 0; i < 20; i++) {
+        const b = document.createElement("button");
+        b.type = "button"; b.className = "payline-thumb"; b.dataset.line = i + 1;
+        b.setAttribute("aria-label", "Line " + (i + 1));
+        const t = document.createElement("span"); t.textContent = i + 1;
+        b.append(lineSvg([i], { thick: 0.14 }), t);
+        b.addEventListener("click", () => { S.plSel = S.plSel === i + 1 ? 0 : i + 1; renderPaylines(); });
+        th.appendChild(b);
+      }
+    }
+    [...th.children].forEach((b, i) => {
+      b.classList.toggle("off", i + 1 > n);
+      b.disabled = i + 1 > n;
+      b.setAttribute("aria-pressed", String(S.plSel === i + 1));
+    });
+  }
+
   function slotRender() {
+    renderPaylines();
     $("slots-lines-out").textContent = $("slots-lines").value;
     $("slots-total").textContent = fmt.format(slotTotal());
   }
