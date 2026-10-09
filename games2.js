@@ -564,7 +564,7 @@
       ctx.save();
       ctx.translate(cx + Math.cos(a) * (rOut * 0.86), cy + Math.sin(a) * (rOut * 0.86));
       ctx.rotate(a + Math.PI / 2);
-      ctx.fillStyle = "#fff"; ctx.font = "600 " + Math.max(9, rOut * 0.075) + "px Figtree, sans-serif";
+      ctx.fillStyle = "#fff"; ctx.font = "600 " + Math.max(9, rOut * 0.075) + "px 'Comic Sans MS', 'Comic Neue', cursive";
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       ctx.fillText(String(n), 0, 0);
       ctx.restore();
@@ -685,7 +685,7 @@
     sCtx.fillStyle = "rgba(0,0,0,.06)";
     for (let i = 0; i < 700; i++) sCtx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
     sCtx.fillStyle = "rgba(15,27,45,.55)";
-    sCtx.font = "800 " + Math.round(w * 0.085) + "px 'Bricolage Grotesque', Figtree, sans-serif";
+    sCtx.font = "800 " + Math.round(w * 0.085) + "px 'Comic Sans MS', 'Comic Neue', cursive";
     sCtx.textAlign = "center"; sCtx.textBaseline = "middle";
     sCtx.fillText(label || "Scratch here", w / 2, h / 2);
     sCanvas.classList.remove("done");

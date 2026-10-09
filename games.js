@@ -207,7 +207,7 @@
     const Y = (mm) => h - padB - ((mm - 1) / (yTop - 1)) * (h - padB - padT);
 
     ctx.lineWidth = 1; ctx.strokeStyle = k.line; ctx.fillStyle = k.muted;
-    ctx.font = "12px Figtree, system-ui, sans-serif"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
+    ctx.font = "12px 'Comic Sans MS', 'Comic Neue', cursive"; ctx.textAlign = "right"; ctx.textBaseline = "middle";
     const step = niceStep((yTop - 1) / 4);
     for (let v = 1; v <= yTop + 1e-9; v += step) {
       const y = Y(v);
@@ -244,7 +244,7 @@
     }
     if (crashed && f < 0.45) { ctx.font = "30px serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("💥", tx, ty); }
 
-    ctx.font = "800 44px 'Bricolage Grotesque', Figtree, sans-serif";
+    ctx.font = "800 44px 'Comic Sans MS', 'Comic Neue', cursive";
     ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
     ctx.fillStyle = crashed ? k.error : (C.end && C.end.kind === "cashed" ? k.teal : k.ink);
     ctx.fillText(m.toFixed(2) + "×", padL + 14, padT + 44);
@@ -451,7 +451,7 @@
     if (PL.table) {
       const y = g.py(g.n) + 8;
       const fs = Math.max(9, Math.min(13, g.dx * 0.36));
-      ctx.font = "600 " + fs + "px Figtree, system-ui, sans-serif";
+      ctx.font = "600 " + fs + "px 'Comic Sans MS', 'Comic Neue', cursive";
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       PL.table.forEach((mult, s) => {
         const x = g.px(g.n, s);
