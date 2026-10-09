@@ -5,16 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>goog</title>
   <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="preconnect" href="https://hcenhekudtnbznynoxbt.supabase.co" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+  <!-- the fallback font loads without blocking the first paint -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap"></noscript>
   <script>
     // set the theme before the page paints (saved choice, otherwise the device setting)
     (function () { var t = null; try { t = localStorage.getItem("goog-theme"); } catch (e) {}
       if (t !== "light" && t !== "dark") t = (window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
-      document.documentElement.setAttribute("data-theme", t); })();
+      document.documentElement.setAttribute("data-theme", t);
+      try { var hu = localStorage.getItem("goog-hue"); if (hu !== null && hu !== "") { document.documentElement.setAttribute("data-hue", ""); document.documentElement.style.setProperty("--hue", hu); } } catch (e) {} })();
   </script>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
   <header class="top">
@@ -26,6 +30,7 @@
       <a href="#admin" data-view="admin" id="nav-admin" hidden>Admin</a>
     </nav>
     <div class="right">
+      <a id="nav-disclaimer" class="disc-link" href="#disclaimer">Disclaimer</a>
       <button id="theme-toggle" type="button" class="theme-btn" aria-label="Switch between light and dark mode" title="Light / dark"></button>
       <span id="balance" class="balance" hidden></span>
       <button id="logout" type="button" class="link" hidden>Log out</button>
@@ -334,7 +339,10 @@
               <button type="button" data-price="25" aria-pressed="false">25</button>
               <button type="button" data-price="100" aria-pressed="false">100</button>
             </div>
+            <label for="scratch-count">Cards: <output id="scratch-count-out">1</output> (cost <output id="scratch-total">5</output>)</label>
+            <input id="scratch-count" type="range" min="1" max="10" value="1">
             <button id="scratch-buy" class="btn wide" type="button">Buy a card</button>
+            <button id="scratch-next" class="btn wide" type="button" hidden>Next card</button>
             <button id="scratch-reveal" class="btn wide alt" type="button" disabled>Reveal all</button>
             <details class="paytable" open>
               <summary>Prizes</summary>
@@ -424,6 +432,29 @@
         </div>
         <p id="me-status" class="status" role="status"></p>
       </div>
+
+      <div id="bg-card" class="card narrow" hidden>
+        <h2>Background color</h2>
+        <p class="sub">Pay 1 goog for a random color. You never know what you get, and a new roll replaces the old one.</p>
+        <div class="bg-row">
+          <span id="bg-swatch" class="bg-swatch" aria-hidden="true"></span>
+          <button id="bg-roll" type="button" class="btn">Gamble for a color (1 goog)</button>
+          <button id="bg-reset" type="button" class="link" hidden>Back to default</button>
+        </div>
+        <p id="bg-status" class="status" role="status"></p>
+      </div>
+    </section>
+
+    <section id="view-disclaimer" hidden>
+      <div class="card narrow disclaimer">
+        <h1>Disclaimer</h1>
+        <ul>
+          <li><strong>Accounts</strong> are managed by Supabase, an outside service. Passwords are handled by Supabase and are never visible to me. The site keeps your username, email address, goog balance, profile picture and game results in that database, and I, as the site owner, can see usernames and balances. Drawings sent in for the draw-a-cat bonus are saved and emailed to me.</li>
+          <li><strong>goog is purely digital</strong> and has no physical or real-world worth. You cannot buy it, sell it or cash it out.</li>
+          <li><strong>AI was used</strong> to assist me in various places on this site.</li>
+          <li>I do <strong>NOT</strong> condone vibecoding.</li>
+        </ul>
+      </div>
     </section>
 
     <!-- ADMIN -->
@@ -500,9 +531,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=5"></script>
-  <script src="games.js?v=5"></script>
-  <script src="games2.js?v=5"></script>
-  <script src="extras.js?v=5"></script>
+  <script src="app.js?v=6"></script>
+  <script src="games.js?v=6"></script>
+  <script src="games2.js?v=6"></script>
+  <script src="extras.js?v=6"></script>
 </body>
 </html>

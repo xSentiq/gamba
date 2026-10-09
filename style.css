@@ -340,3 +340,30 @@ select { font: inherit; color: var(--ink); background: var(--paper); border: 1px
 .theme-btn { background: none; border: 1px solid var(--line); border-radius: 999px; width: 2.2rem; height: 2.2rem; display: inline-grid; place-items: center; font-size: 1.05rem; line-height: 1; color: var(--ink); }
 .theme-btn:hover { border-color: var(--brass); }
 :root[data-theme="dark"] .card { box-shadow: 0 0 0 1px rgba(182,107,255,.08), 0 8px 30px rgba(10,5,20,.35); }
+
+/* gambled background color: one hue per account, shown in both light and dark mode */
+:root[data-hue] {
+  --bg: linear-gradient(160deg, hsl(var(--hue) 90% 97%), hsl(var(--hue) 80% 92%));
+  --paper: hsl(var(--hue) 90% 95%); --surface: hsl(var(--hue) 70% 99%); --line: hsl(var(--hue) 40% 84%);
+  --ink: hsl(var(--hue) 40% 11%); --muted: hsl(var(--hue) 18% 36%); --brass: hsl(var(--hue) 65% 40%);
+}
+:root[data-hue][data-theme="dark"] {
+  --bg: linear-gradient(160deg, hsl(var(--hue) 45% 8%), hsl(var(--hue) 40% 15%) 50%, hsl(var(--hue) 38% 24%));
+  --paper: hsl(var(--hue) 40% 9%); --surface: hsl(var(--hue) 28% 17%); --line: hsl(var(--hue) 22% 30%);
+  --ink: hsl(var(--hue) 40% 94%); --muted: hsl(var(--hue) 20% 72%); --brass: hsl(var(--hue) 90% 70%);
+}
+.bg-row { display: flex; align-items: center; gap: .8rem; flex-wrap: wrap; }
+.bg-swatch { width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 2px solid var(--line); background: conic-gradient(from 0deg, hsl(0 85% 60%), hsl(60 85% 55%), hsl(120 70% 50%), hsl(180 75% 50%), hsl(240 80% 62%), hsl(300 80% 60%), hsl(360 85% 60%)); flex: none; }
+.bg-swatch.set { background: hsl(var(--sw) 85% 60%); }
+
+/* disclaimer */
+.disc-link { color: var(--muted); font-weight: 600; text-decoration: none; padding: .3rem .5rem; border-radius: 6px; }
+.disc-link:hover, .disc-link[aria-current="page"] { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.disclaimer { max-width: 40rem; }
+.disclaimer ul { padding-left: 1.2rem; display: grid; gap: .8rem; }
+
+/* snappier controls: no 300ms tap delay, instant pressed feedback */
+button, a, label.btn, input[type="range"], select, summary { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.btn:active:not(:disabled), .chip-btn:active:not(:disabled), .seg button:active:not(:disabled), .box:active:not(:disabled), .rb:active { transform: scale(.97); }
+.btn, .chip-btn, .seg button, .rb { transition: transform .06s ease-out, opacity .12s; }
+#bg-card { margin: 1rem auto 0; }

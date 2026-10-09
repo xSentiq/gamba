@@ -13,7 +13,8 @@
   let session = null;
   let me = null; // { id, username, goog, avatar_version, created_at }
 
-  const PROFILE_COLS = "id, username, goog, avatar_version, created_at";
+  const PROFILE_COLS = "id, username, goog, avatar_version, created_at, bg_hue";
+  const PROFILE_COLS_BASE = "id, username, goog, avatar_version, created_at";
 
   // ---------- helpers ----------
   function setStatus(el, msg, kind = "") { el.textContent = msg; el.className = "status " + kind; }
@@ -65,9 +66,29 @@
     return data;
   }
 
+  // For "do many rounds in one request" functions added by migration 006: if the database does not have the
+  // function yet, run the fallback instead (several single rounds).
+  async function rpcOrFallback(name, args, fallback) {
+    try { return await rpc(name, args); }
+    catch (e) {
+      if (/could not find|does not exist|schema cache/i.test(e.message)) return fallback();
+      throw e;
+    }
+  }
+
+  // Background color: one hue per account (0..359), or none for the default look. Colors are in style.css.
+  function applyHue(h) {
+    const root = document.documentElement;
+    const has = h !== null && h !== undefined && h !== "";
+    if (has) { root.setAttribute("data-hue", ""); root.style.setProperty("--hue", String(h)); }
+    else { root.removeAttribute("data-hue"); root.style.removeProperty("--hue"); }
+    try { if (has) localStorage.setItem("goog-hue", String(h)); else localStorage.removeItem("goog-hue"); } catch (e) {}
+    window.dispatchEvent(new Event("goog-theme"));
+  }
+
   // Shared with games.js, games2.js and extras.js
   window.Goog = {
-    db, fmt, googIcon, setStatus, toast, rpc, catUrl, randCat, CAT_COUNT, makeAvatar,
+    db, fmt, googIcon, setStatus, toast, rpc, rpcOrFallback, applyHue, catUrl, randCat, CAT_COUNT, makeAvatar,
     me: () => me,
     loggedIn: () => !!session,
     setBalance(n) {
@@ -77,7 +98,7 @@
   };
 
   // ---------- routing:  #games, #games/mines, #board, #profile ----------
-  const VIEWS = ["games", "board", "profile", "admin"];
+  const VIEWS = ["games", "board", "profile", "admin", "disclaimer"];
   let current = null;
   function route() {
     const [v, sub] = location.hash.slice(1).split("/");
@@ -91,6 +112,7 @@
     });
     if (name === "games") { if (window.GoogGames) window.GoogGames.show(sub); }
     else if (window.GoogGames) window.GoogGames.leave();
+    const dl = $("nav-disclaimer"); if (dl) { if (name === "disclaimer") dl.setAttribute("aria-current", "page"); else dl.removeAttribute("aria-current"); }
     if (name === "board") loadBoard();
     if (name === "profile") renderProfile();
     if (name === "admin" && window.GoogAdmin) window.GoogAdmin.show();
@@ -100,8 +122,10 @@
   // ---------- data ----------
   async function loadMe() {
     if (!session) { me = null; return; }
-    const { data, error } = await db.from("profiles").select(PROFILE_COLS).eq("id", session.user.id).single();
+    let { data, error } = await db.from("profiles").select(PROFILE_COLS).eq("id", session.user.id).single();
+    if (error) ({ data, error } = await db.from("profiles").select(PROFILE_COLS_BASE).eq("id", session.user.id).single());   // migration 006 not run yet
     me = error ? null : data;
+    if (me && "bg_hue" in me) applyHue(me.bg_hue);
   }
 
   function renderNav() {
@@ -160,9 +184,49 @@
     $("me-since").textContent = "Member since " + new Date(me.created_at).toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" });
     $("me-goog").textContent = fmt.format(me.goog);
     $("avatar-remove").hidden = !me.avatar_version;
+    paintBgCard();
     const { count } = await db.from("profiles").select("id", { count: "exact", head: true }).gt("goog", me.goog);
     $("me-rank").textContent = count === null ? "" : "Rank #" + (count + 1);
   }
+
+  // ---------- background color gamble ----------
+  function paintBgCard() {
+    $("bg-card").hidden = !(session && me);
+    const has = me && me.bg_hue !== null && me.bg_hue !== undefined;
+    const sw = $("bg-swatch");
+    sw.classList.toggle("set", !!has);
+    if (has) sw.style.setProperty("--sw", me.bg_hue);
+    $("bg-reset").hidden = !has;
+  }
+  let rolling = false;
+  $("bg-roll").onclick = async () => {
+    if (rolling || !me) return;
+    rolling = true;
+    const btn = $("bg-roll"), sw = $("bg-swatch");
+    btn.disabled = true;
+    setStatus($("bg-status"), "");
+    sw.classList.add("set");
+    const t0 = performance.now();
+    const spin = setInterval(() => sw.style.setProperty("--sw", Math.floor(Math.random() * 360)), 70);
+    try {
+      const [res] = await Promise.all([rpc("gamble_bg_color"), new Promise((r) => setTimeout(r, 900))]);
+      clearInterval(spin);
+      sw.style.setProperty("--sw", res.hue);
+      me.bg_hue = res.hue;
+      applyHue(res.hue);
+      window.Goog.setBalance(res.balance);
+      setStatus($("bg-status"), "New color! Hue " + res.hue + ".", "ok");
+    } catch (e) {
+      clearInterval(spin);
+      const m = /could not find|does not exist|schema cache/i.test(e.message) ? "Not available yet: the site owner still has to run migration 006." : e.message;
+      setStatus($("bg-status"), m, "error");
+    } finally { clearInterval(spin); rolling = false; btn.disabled = false; paintBgCard(); }
+  };
+  $("bg-reset").onclick = async () => {
+    if (!me) return;
+    try { await rpc("reset_bg_color"); me.bg_hue = null; applyHue(null); paintBgCard(); setStatus($("bg-status"), "Back to the default look.", "ok"); }
+    catch (e) { setStatus($("bg-status"), e.message, "error"); }
+  };
 
   // Resize to a 256×256 square JPEG before upload
   async function toAvatarBlob(file) {
@@ -262,8 +326,14 @@
   $("logout").onclick = async () => { await db.auth.signOut(); };
 
   // Don't await Supabase calls inside this callback (it can deadlock); defer instead.
-  db.auth.onAuthStateChange((_event, s) => {
+  db.auth.onAuthStateChange((event, s) => {
+    const prevId = session ? session.user.id : null;
     session = s;
+    // The boot code below handles the first load. Token refreshes, and the SIGNED_IN that supabase-js re-sends
+    // whenever the browser tab regains focus, change nothing, so skip them (they used to reload everything).
+    if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
+    if (event === "SIGNED_IN" && s && s.user.id === prevId) return;
+    if (!s) applyHue(null);
     setTimeout(async () => {
       await loadMe();
       renderNav();
@@ -276,12 +346,18 @@
 
   // ---------- boot (after games.js has registered itself) ----------
   document.addEventListener("DOMContentLoaded", async () => {
-    const { data } = await db.auth.getSession();
+    const { data } = await db.auth.getSession();                   // reads the saved login from the browser, no network
     session = data.session;
-    await loadMe();
-    renderNav();
-    route();
+    if (!session) applyHue(null);
+    route();                                                        // show the page right away
+    const mine = loadMe();                                          // ...and fetch the profile and the daily bonus in parallel
     if (window.GoogExtras) window.GoogExtras.onSession(session);
+    await mine;
+    renderNav();
+    if (current === "profile") renderProfile();
+    // warm the browser cache with the cat pictures so slots, tower and scratch cards never wait on them
+    const warm = () => { for (let i = 1; i <= CAT_COUNT; i++) { const im = new Image(); im.src = catUrl(i); } new Image().src = "assets/cats/plink.jpg"; new Image().src = "assets/cats/drooling.jpg"; };
+    if (window.requestIdleCallback) window.requestIdleCallback(warm, { timeout: 2000 }); else setTimeout(warm, 300);
   });
 })();
 
@@ -298,6 +374,6 @@
     root.setAttribute("data-theme", next);
     try { localStorage.setItem("goog-theme", next); } catch (e) {}
     paint();
-    window.dispatchEvent(new Event("resize")); // canvases redraw with the new colors
+    window.dispatchEvent(new Event("goog-theme")); // canvases redraw with the new colors
   });
 })();

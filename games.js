@@ -41,11 +41,14 @@
   const plinkCat = new Image();
   plinkCat.src = "assets/cats/plink.jpg";
 
+  let colorCache = null;                           // reading CSS variables is slow, so do it once per theme, not once per frame
   const cssColors = () => {
+    if (colorCache) return colorCache;
     const cs = getComputedStyle(document.documentElement);
     const col = (n) => cs.getPropertyValue(n).trim();
-    return { line: col("--line"), muted: col("--muted"), ink: col("--ink"), brass: col("--brass"), teal: col("--teal"), error: col("--error"), surface: col("--surface"), paper: col("--paper") };
+    return (colorCache = { line: col("--line"), muted: col("--muted"), ink: col("--ink"), brass: col("--brass"), teal: col("--teal"), error: col("--error"), surface: col("--surface"), paper: col("--paper") });
   };
+  window.addEventListener("goog-theme", () => { colorCache = null; if (activeSub === "plinko") { PL.layer = null; drawPlinko(); } if (activeSub === "crash") drawCrash(); });
 
   function sizeCanvas(canvas) {
     const r = canvas.getBoundingClientRect();
@@ -187,7 +190,20 @@
   const multAt = (t) => Math.floor(Math.exp(C.rate * Math.min(t, 300)) * 100) / 100;
 
   function resizeCrash() { const d = sizeCanvas(crashCanvas); if (d) { cDims = d; drawCrash(); } }
-  window.addEventListener("resize", () => { if (activeSub === "crash") resizeCrash(); if (activeSub === "plinko") resizePlinko(); });
+  let resizeQueued = false, lastW = 0;
+  window.addEventListener("resize", () => {
+    if (resizeQueued) return;
+    resizeQueued = true;
+    requestAnimationFrame(() => {
+      resizeQueued = false;
+      const w = window.innerWidth;
+      if (w === lastW && !(window.devicePixelRatio && window.devicePixelRatio !== lastDpr)) return;   // mobile address-bar scrolling fires resize constantly; height-only changes need no redraw
+      lastW = w; lastDpr = window.devicePixelRatio;
+      if (activeSub === "crash") resizeCrash();
+      if (activeSub === "plinko") resizePlinko();
+    });
+  });
+  let lastDpr = window.devicePixelRatio;
   crashCat.addEventListener("load", () => { if (activeSub === "crash") drawCrash(); });
   plinkCat.addEventListener("load", () => { if (activeSub === "plinko") drawPlinko(); });
 
@@ -418,9 +434,9 @@
   // Cat Drop (plinko)
   // =====================================================================
   const plinkoCanvas = $("plinko-canvas");
-  const PL = { rows: 12, risk: "medium", table: null, tables: {}, dims: null, balls: [], hits: new Set(), busy: false, raf: 0 };
+  const PL = { rows: 12, risk: "medium", table: null, tables: {}, dims: null, balls: [], hits: new Set(), busy: false, layer: null, loop: 0 };
 
-  function resizePlinko() { const d = sizeCanvas(plinkoCanvas); if (d) { PL.dims = d; drawPlinko(); } }
+  function resizePlinko() { const d = sizeCanvas(plinkoCanvas); if (d) { PL.dims = d; PL.layer = null; drawPlinko(); } }
 
   function plGeometry() {
     const { w, h } = PL.dims;
@@ -433,21 +449,22 @@
       py: (level) => top + level * rowH };
   }
 
-  function drawPlinko() {
-    if (!PL.dims) return;
+  // The pegs and payout slots never move while balls fall, so they are drawn once into an off-screen layer and
+  // each animation frame only copies that layer and draws the balls. (This is what keeps 20 cats smooth.)
+  function buildPlinkoLayer() {
     const g = plGeometry();
-    const { ctx } = PL.dims;
+    const dpr = window.devicePixelRatio || 1;
+    const layer = document.createElement("canvas");
+    layer.width = Math.round(g.w * dpr); layer.height = Math.round(g.h * dpr);
+    const ctx = layer.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const k = cssColors();
-    ctx.clearRect(0, 0, g.w, g.h);
-
-    // pegs
     ctx.fillStyle = k.muted;
     for (let lvl = 0; lvl < g.n; lvl++) {
       for (let j = 0; j <= lvl; j++) {
         ctx.beginPath(); ctx.arc(g.px(lvl, j), g.py(lvl), 3, 0, Math.PI * 2); ctx.fill();
       }
     }
-    // slots with multipliers
     if (PL.table) {
       const y = g.py(g.n) + 8;
       const fs = Math.max(9, Math.min(13, g.dx * 0.36));
@@ -465,16 +482,27 @@
         ctx.fillText((mult >= 100 ? Math.round(mult) : +mult.toFixed(mult >= 10 ? 1 : 2)) + "×", x, y + g.slotH / 2);
       });
     }
-    // balls (the cats)
+    return layer;
+  }
+
+  function drawPlinko() {
+    if (!PL.dims) return;
+    const { ctx } = PL.dims;
+    const g = plGeometry();
+    if (!PL.layer) PL.layer = buildPlinkoLayer();
+    ctx.clearRect(0, 0, g.w, g.h);
+    ctx.drawImage(PL.layer, 0, 0, g.w, g.h);
+    if (!PL.balls.length) return;
+    const k = cssColors();
     const r = Math.max(8, Math.min(13, g.dx * 0.32));
+    const ready = plinkCat.complete && plinkCat.naturalWidth;
+    ctx.strokeStyle = k.brass; ctx.lineWidth = 2;
     for (const b of PL.balls) {
       ctx.save();
-      ctx.translate(b.x, b.y);
-      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.clip();
-      if (plinkCat.complete && plinkCat.naturalWidth) ctx.drawImage(plinkCat, -r, -r, 2 * r, 2 * r);
+      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.clip();
+      if (ready) ctx.drawImage(plinkCat, b.x - r, b.y - r, 2 * r, 2 * r);
       ctx.restore();
-      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
-      ctx.strokeStyle = k.brass; ctx.lineWidth = 2; ctx.stroke();
+      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2); ctx.stroke();
     }
   }
 
@@ -484,36 +512,47 @@
       try { PL.tables[key] = (await rpc("plinko_table", { p_rows: PL.rows, p_risk: PL.risk })).map(Number); }
       catch (e) { setMsg("plinko-msg", e.message, "error"); return; }
     }
-    if (key === PL.rows + ":" + PL.risk) { PL.table = PL.tables[key]; PL.hits = new Set(); PL.balls = []; drawPlinko(); }
+    if (key === PL.rows + ":" + PL.risk) { PL.table = PL.tables[key]; PL.hits = new Set(); PL.balls = []; PL.layer = null; drawPlinko(); }
   }
 
-  function animateBall(path) {
-    const ball = { x: -100, y: -100 };
-    PL.balls.push(ball);
-    return new Promise((resolve) => {
-      const g = plGeometry();
-      const seg = 150; // ms per peg
-      const start = performance.now();
-      const total = seg * path.length + 200;
-      const rightsAt = [0];
-      path.forEach((b) => rightsAt.push(rightsAt[rightsAt.length - 1] + b));
-      const step = (now) => {
-        const el = now - start;
-        const k = Math.min(path.length, Math.floor(el / seg));
-        const f = Math.min(1, (el - k * seg) / seg);
-        if (k >= path.length) {
-          Object.assign(ball, { x: g.px(g.n, rightsAt[g.n]), y: g.py(g.n) + 8 + g.slotH / 2 });
-        } else {
-          const x0 = g.px(k, rightsAt[k]);
-          const x1 = g.px(k + 1, rightsAt[k + 1]);
-          const y0 = g.py(k), y1 = k + 1 === g.n ? g.py(g.n) + 8 + g.slotH / 2 : g.py(k + 1);
-          const ease = f * f * (3 - 2 * f);
-          Object.assign(ball, { x: x0 + (x1 - x0) * ease, y: y0 + (y1 - y0) * f - Math.sin(f * Math.PI) * 7 });
+  // One animation loop for all falling cats. Each ball knows its own start time.
+  function stepPlinko(now) {
+    const g = plGeometry();
+    const live = [];
+    for (const b of PL.flights) {
+      const el = now - b.t0;
+      if (el < 0) { live.push(b); continue; }                        // not released yet
+      const path = b.path, seg = b.seg;
+      const k = Math.min(path.length, Math.floor(el / seg));
+      const f = Math.min(1, (el - k * seg) / seg);
+      if (k >= path.length) {
+        if (el >= seg * path.length + 160) {                         // landed: light up its slot, remove the ball
+          PL.balls = PL.balls.filter((x) => x !== b.pos);
+          PL.hits.add(b.slot); PL.layer = null;
+          b.done();
+          continue;
         }
-        if (el < total) { drawPlinko(); requestAnimationFrame(step); }
-        else { PL.balls = PL.balls.filter((b) => b !== ball); resolve(); }
-      };
-      requestAnimationFrame(step);
+        Object.assign(b.pos, { x: g.px(g.n, b.rights[g.n]), y: g.py(g.n) + 8 + g.slotH / 2 });
+      } else {
+        const x0 = g.px(k, b.rights[k]), x1 = g.px(k + 1, b.rights[k + 1]);
+        const y0 = g.py(k), y1 = k + 1 === g.n ? g.py(g.n) + 8 + g.slotH / 2 : g.py(k + 1);
+        const ease = f * f * (3 - 2 * f);
+        Object.assign(b.pos, { x: x0 + (x1 - x0) * ease, y: y0 + (y1 - y0) * f - Math.sin(f * Math.PI) * 7 });
+        if (!PL.balls.includes(b.pos)) PL.balls.push(b.pos);
+      }
+      live.push(b);
+    }
+    PL.flights = live;
+    drawPlinko();
+    if (PL.flights.length) PL.loop = requestAnimationFrame(stepPlinko); else PL.loop = 0;
+  }
+  PL.flights = [];
+  function launchBall(path, slot, delay, seg) {
+    return new Promise((resolve) => {
+      const rights = [0];
+      path.forEach((bit) => rights.push(rights[rights.length - 1] + bit));
+      PL.flights.push({ path, slot, rights, seg, t0: performance.now() + delay, pos: { x: -100, y: -100 }, done: resolve });
+      if (!PL.loop) PL.loop = requestAnimationFrame(stepPlinko);
     });
   }
 
@@ -543,35 +582,38 @@
 
   $("plinko-drop").onclick = async () => {
     if (PL.busy) return;
-    plLock(true);
+    plLock(true);                                                    // instant feedback, before the network answers
+    $("plinko-drop").textContent = "…";
     setMsg("plinko-msg", "");
-    const results = [], flights = [];
-    let err = null;
     try {
       const bet = readBet("plinko-bet");
       const n = plCount();
-      PL.hits = new Set();
-      for (let i = 0; i < n; i++) {
-        let res;
-        try { res = await rpc("play_plinko", { p_bet: bet, p_rows: PL.rows, p_risk: PL.risk }); }
-        catch (e) { err = e; break; }                       // e.g. out of goog: stop, but finish the ones already dropped
-        results.push(res);
-        flights.push(animateBall(res.path).then(() => { PL.hits.add(res.slot); drawPlinko(); }));
-        if (i < n - 1) await new Promise((r) => setTimeout(r, 170));
+      PL.hits = new Set(); PL.layer = null;
+      let drops, balance;
+      if (n === 1) {
+        const r = await rpc("play_plinko", { p_bet: bet, p_rows: PL.rows, p_risk: PL.risk });
+        drops = [r]; balance = r.balance;
+      } else {
+        // one request for all cats. (If migration 006 has not been run yet, fall back to several single drops.)
+        const r = await G.rpcOrFallback("play_plinko_multi", { p_bet: bet, p_rows: PL.rows, p_risk: PL.risk, p_count: n }, async () => {
+          let last = 0;
+          const all = await Promise.all(Array.from({ length: n }, () => rpc("play_plinko", { p_bet: bet, p_rows: PL.rows, p_risk: PL.risk }).then((x) => { last = x.balance; return x; })));
+          return { drops: all, balance: last };
+        });
+        drops = r.drops; balance = r.balance;
       }
-      await Promise.all(flights);
-      if (results.length) {
-        const paid = results.reduce((a, r) => a + Number(r.payout), 0);
-        const spent = bet * results.length;
-        const net = paid - spent;
-        const best = Math.max(...results.map((r) => Number(r.multiplier)));
-        const label = results.length === 1 ? "×" + Number(results[0].multiplier).toFixed(2) + ": " : results.length + " cats, best ×" + best.toFixed(2) + ": ";
-        if (net > 0) setMsg("plinko-msg", label + "you won " + fmt.format(net) + " goog!", "ok");
-        else if (net === 0) setMsg("plinko-msg", label + "you got your bet back.");
-        else setMsg("plinko-msg", label + "you lost " + fmt.format(-net) + " goog.", "error");
-        applyBalance(results[results.length - 1]);
-      }
-      if (err) setMsg("plinko-msg", (results.length ? "Stopped after " + results.length + " of " + n + ": " : "") + err.message, "error");
+      // release the cats quickly: all of them within about a second and a half; a bit faster falling when there are many
+      const gap = n > 1 ? Math.max(35, Math.min(120, 1400 / n)) : 0;
+      const seg = n > 1 ? 105 : 150;
+      await Promise.all(drops.map((d, i) => launchBall(d.path, d.slot, i * gap, seg)));
+      const paid = drops.reduce((a, d) => a + Number(d.payout), 0);
+      const net = paid - bet * drops.length;
+      const best = Math.max(...drops.map((d) => Number(d.multiplier)));
+      const label = drops.length === 1 ? "×" + Number(drops[0].multiplier).toFixed(2) + ": " : drops.length + " cats, best ×" + best.toFixed(2) + ": ";
+      if (net > 0) setMsg("plinko-msg", label + "you won " + fmt.format(net) + " goog!", "ok");
+      else if (net === 0) setMsg("plinko-msg", label + "you got your bet back.");
+      else setMsg("plinko-msg", label + "you lost " + fmt.format(-net) + " goog.", "error");
+      applyBalance({ balance });
     } catch (e) { setMsg("plinko-msg", e.message, "error"); }
     finally { plLock(false); plRender(); }
   };

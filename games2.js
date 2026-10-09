@@ -667,7 +667,7 @@
   // =====================================================================
   // SCRATCH CARDS
   // =====================================================================
-  const SC = { price: 5, card: null, busy: false, drawing: false, info: null };
+  const SC = { price: 5, card: null, busy: false, drawing: false, info: null, queue: [], idx: 0, finalBal: 0, pending: 0, spent: 0, won: 0, winners: 0 };
   const sCanvas = $("scratch-canvas");
   const sCtx = sCanvas.getContext("2d", { willReadFrequently: true });
 
@@ -705,6 +705,43 @@
     });
   }
 
+  const scCount = () => Math.max(1, Math.min(10, Math.floor(Number($("scratch-count").value)) || 1));
+  function scRender() {
+    const n = scCount();
+    $("scratch-count-out").textContent = n;
+    $("scratch-total").textContent = fmt.format(n * SC.price);
+    $("scratch-buy").textContent = n > 1 ? "Buy " + n + " cards" : "Buy a card";
+  }
+  function scButtons() {
+    const left = SC.queue.length - SC.idx - 1;                         // cards after the current one
+    const cur = SC.card;
+    $("scratch-next").hidden = !(cur && cur.revealed && left > 0);
+    $("scratch-next").textContent = "Next card (" + left + " left)";
+    $("scratch-reveal").disabled = !(cur && (!cur.revealed || left > 0));
+    $("scratch-buy").disabled = SC.busy;
+  }
+  function showCard(i, quiet) {
+    SC.idx = i;
+    const res = SC.queue[i];
+    buildGrid(res.cells, res.win_symbol);
+    if (!paintCover() && !quiet) throw new Error("Open the Scratch Cards screen first.");
+    SC.card = { res, revealed: false };
+    const n = SC.queue.length;
+    setMsg("scratch-msg", (n > 1 ? "Card " + (i + 1) + " of " + n + ". " : "") + "Scratch the card to reveal your tiles.");
+    scButtons();
+  }
+  function settle(res) {                                               // pay out one card in the display
+    SC.pending -= Number(res.payout);
+    SC.won += Number(res.payout);
+    if (res.payout > 0) SC.winners++;
+    G.setBalance(SC.finalBal - SC.pending);
+  }
+  function summary() {
+    const n = SC.queue.length;
+    const net = SC.won - SC.spent;
+    const txt = n + " cards: " + SC.winners + " winner" + (SC.winners === 1 ? "" : "s") + ", won " + fmt.format(SC.won) + " of " + fmt.format(SC.spent) + " goog (" + (net >= 0 ? "+" : "") + fmt.format(net) + ").";
+    setMsg("scratch-msg", txt, net > 0 ? "ok" : net < 0 ? "error" : "");
+  }
   function revealCard() {
     const c = SC.card;
     if (!c || c.revealed) return;
@@ -714,11 +751,26 @@
     document.querySelectorAll("#scratch-grid .s-cell").forEach((d) => {
       if (res.win_symbol && Number(d.dataset.sym) === res.win_symbol) d.classList.add("win");
     });
-    if (res.payout > 0) setMsg("scratch-msg", "Three matching cats! ×" + res.multiplier + " wins " + fmt.format(res.payout) + " goog.", "ok");
-    else setMsg("scratch-msg", "No match this time.", "error");
-    G.setBalance(res.balance);
-    $("scratch-reveal").disabled = true;
-    $("scratch-buy").disabled = false;
+    settle(res);
+    const n = SC.queue.length, last = SC.idx === n - 1;
+    if (n === 1) {
+      if (res.payout > 0) setMsg("scratch-msg", "Three matching cats! ×" + res.multiplier + " wins " + fmt.format(res.payout) + " goog.", "ok");
+      else setMsg("scratch-msg", "No match this time.", "error");
+    } else if (last) summary();
+    else setMsg("scratch-msg", (res.payout > 0 ? "Card " + (SC.idx + 1) + ": ×" + res.multiplier + " wins " + fmt.format(res.payout) + " goog! " : "Card " + (SC.idx + 1) + ": no match. ") + "Next card when you are ready.", res.payout > 0 ? "ok" : "");
+    scButtons();
+  }
+  function revealAll() {                                               // finish the whole stack at once
+    if (!SC.card) return;
+    revealCard();
+    while (SC.idx < SC.queue.length - 1) {
+      showCard(SC.idx + 1, true);
+      const c = SC.card; c.revealed = true; sCanvas.classList.add("done");
+      settle(c.res);
+      document.querySelectorAll("#scratch-grid .s-cell").forEach((d) => { if (c.res.win_symbol && Number(d.dataset.sym) === c.res.win_symbol) d.classList.add("win"); });
+    }
+    if (SC.queue.length > 1) summary();
+    scButtons();
   }
 
   function scratchedFraction() {
@@ -753,25 +805,39 @@
   document.querySelectorAll("[data-price]").forEach((b) => b.addEventListener("click", () => {
     SC.price = Number(b.dataset.price);
     document.querySelectorAll("[data-price]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    scRender();
   }));
+  $("scratch-count").addEventListener("input", scRender);
+  scRender();
 
   $("scratch-buy").onclick = async () => {
     if (SC.busy) return;
     SC.busy = true;
-    if (SC.card && !SC.card.revealed) revealCard();       // buying a new card reveals the old one
-    $("scratch-buy").disabled = true;
+    if (SC.card) revealAll();                                         // buying new cards finishes the old stack first
+    $("scratch-buy").disabled = true; $("scratch-reveal").disabled = true; $("scratch-next").hidden = true;
     try {
-      const res = await rpc("play_scratch", { p_price: SC.price });
-      buildGrid(res.cells, res.win_symbol);
-      if (!paintCover()) throw new Error("Open the Scratch Cards screen first.");
-      SC.card = { res, revealed: false };
-      G.setBalance(res.balance - res.payout);             // the price is gone; the prize shows after scratching
-      setMsg("scratch-msg", "Scratch the card to reveal your tiles.");
-      $("scratch-reveal").disabled = false;
-    } catch (e) { setMsg("scratch-msg", e.message, "error"); $("scratch-buy").disabled = false; }
-    finally { SC.busy = false; }
+      const n = scCount(), price = SC.price;
+      let cards, balance;
+      if (n === 1) {
+        const r = await rpc("play_scratch", { p_price: price });
+        cards = [r]; balance = r.balance;
+      } else {
+        const r = await G.rpcOrFallback("play_scratch_multi", { p_price: price, p_count: n }, async () => {
+          let last = 0;
+          const all = await Promise.all(Array.from({ length: n }, () => rpc("play_scratch", { p_price: price }).then((x) => { last = x.balance; return x; })));
+          return { cards: all, balance: last };
+        });
+        cards = r.cards; balance = r.balance;
+      }
+      SC.queue = cards; SC.finalBal = balance; SC.spent = price * cards.length; SC.won = 0; SC.winners = 0;
+      SC.pending = cards.reduce((a, c) => a + Number(c.payout), 0);
+      G.setBalance(balance - SC.pending);                             // the price is gone; prizes show as you scratch
+      showCard(0);
+    } catch (e) { setMsg("scratch-msg", e.message, "error"); }
+    finally { SC.busy = false; $("scratch-buy").disabled = false; scButtons(); }
   };
-  $("scratch-reveal").onclick = revealCard;
+  $("scratch-reveal").onclick = revealAll;
+  $("scratch-next").onclick = () => { if (SC.card && SC.card.revealed && SC.idx < SC.queue.length - 1) showCard(SC.idx + 1); };
 
   async function scratchShow() {
     if (!SC.info) {
@@ -798,6 +864,6 @@
   }
   GG.register("scratch", {
     show: scratchShow,
-    leave() { if (SC.card && !SC.card.revealed) revealCard(); },
+    leave() { if (SC.card) revealAll(); },
   });
 })();
