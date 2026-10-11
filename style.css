@@ -398,3 +398,6 @@ button, a, label.btn, input[type="range"], select, summary { touch-action: manip
 .tap-up .pips i { width: .6rem; height: .6rem; border-radius: 50%; border: 1px solid var(--brass); display: inline-block; }
 .tap-up .pips i.on { background: var(--brass); }
 .btn.small { padding: .35rem .8rem; font-size: .9rem; }
+
+.earn-bar .btn { text-decoration: none; }
+.earn-bar .link { padding: .2rem .5rem; }

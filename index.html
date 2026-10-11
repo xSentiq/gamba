@@ -18,7 +18,7 @@
       document.documentElement.setAttribute("data-theme", t);
       try { var hu = localStorage.getItem("goog-hue"); if (hu !== null && hu !== "") { document.documentElement.setAttribute("data-hue", ""); document.documentElement.style.setProperty("--hue", hu); } } catch (e) {} })();
   </script>
-  <link rel="stylesheet" href="style.css?v=10">
+  <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
   <header class="top">
@@ -37,6 +37,12 @@
       <button id="logout" type="button" class="link" hidden>Log out</button>
     </div>
   </header>
+
+  <div id="earn-bar" class="rescue-bar earn-bar" hidden>
+    <span>Low on goog? <strong>Tap the goog</strong> earns you goog for free.</span>
+    <a class="btn small" href="#games/tap">Play Tap the goog</a>
+    <button id="earn-close" type="button" class="link" aria-label="Dismiss">✕</button>
+  </div>
 
   <div id="rescue-bar" class="rescue-bar" hidden>
     <span>Almost out of goog?</span>
@@ -539,10 +545,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=10"></script>
-  <script src="fx.js?v=10"></script>
-  <script src="games.js?v=10"></script>
-  <script src="games2.js?v=10"></script>
-  <script src="extras.js?v=10"></script>
+  <script src="app.js?v=12"></script>
+  <script src="fx.js?v=12"></script>
+  <script src="games.js?v=12"></script>
+  <script src="games2.js?v=12"></script>
+  <script src="extras.js?v=12"></script>
 </body>
 </html>
