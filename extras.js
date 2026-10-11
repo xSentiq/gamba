@@ -35,7 +35,7 @@
     if (id === E.userId) return;           // token refreshes and repeated events change nothing
     E.userId = id;
     if (!id) {
-      E.status = null; render();
+      E.status = null; render(); earnBar(null);
       if ($("draw-dialog").open) $("draw-dialog").close();
       return;
     }
@@ -50,9 +50,29 @@
       } catch (_) { /* banned or offline: nothing to do */ }
       await refreshStatus();
     }
+    earnBar(E.status && typeof E.status.goog === "number" ? E.status.goog : undefined);
   }
 
+  // ---------- "low on goog" hint: points to Tap the goog, where goog can be earned for free ----------
+  const LOW_GOOG = 10;
+  let earnDismissed = false, wasLow = false;
+  function earnBar(n) {
+    const bar = $("earn-bar");
+    if (!bar) return;
+    if (typeof n !== "number") { const me = G.me(); n = me ? me.goog : null; }
+    const low = G.loggedIn() && typeof n === "number" && n < LOW_GOOG;
+    if (!low) earnDismissed = false;
+    bar.hidden = !(low && !earnDismissed && location.hash !== "#games/tap");
+    wasLow = low;
+  }
+  document.addEventListener("DOMContentLoaded", () => {
+    const close = $("earn-close");
+    if (close) close.addEventListener("click", () => { earnDismissed = true; $("earn-bar").hidden = true; });
+  });
+  window.addEventListener("hashchange", () => earnBar());
+
   function balanceChanged(n) {
+    earnBar(n);
     if (!G.loggedIn()) return;
     const low = typeof n === "number" && n < (E.status ? E.status.rescue_below : 10);
     if (!low && !(E.status && E.status.rescue_available)) return;
@@ -60,7 +80,7 @@
     E.timer = setTimeout(() => refreshStatus(false), 700);   // let the game animation finish before the bar appears
   }
 
-  window.GoogExtras = { onSession, balanceChanged, refreshStatus };
+  window.GoogExtras = { onSession, balanceChanged, refreshStatus, earnBar };
 
   // ---------- draw a cat ----------
   const dlg = $("draw-dialog");

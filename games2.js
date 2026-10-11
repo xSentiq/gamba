@@ -8,6 +8,8 @@
   const { fmt, rpc } = G;
   const setMsg = (id, text, kind = "") => G.setStatus($(id), text, kind);
   const applyBalance = (res) => { if (res && typeof res.balance === "number") G.setBalance(res.balance); };
+  const fx = (name, arg) => { if (window.Fx) window.Fx.sound(name, arg); };      // sound effects (fx.js)
+  const celebrate = (o) => { if (window.Fx) window.Fx.win(o); };                   // win animation (fx.js)
   const reduced = () => !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const sleep = (ms) => new Promise((r) => setTimeout(r, reduced() ? Math.min(ms, 30) : ms));
   const money = (n) => fmt.format(Math.round(n * 100) / 100);
@@ -72,11 +74,13 @@
           if (stopped[r]) continue;
           if (el >= stopAt[r]) {
             stopped[r] = true;
+            fx("thump");
             for (let w = 0; w < 3; w++) { setCell(r, w, grid[r][w]); cellEl(r, w).classList.remove("spinning"); }
           } else {
             for (let w = 0; w < 3; w++) setCell(r, w, randomSym());
           }
         }
+        fx("tick");
         if (stopped.every(Boolean)) { clearInterval(iv); resolve(); }
       }, 70);
     });
@@ -199,10 +203,13 @@
       if (res.free_spins > 0) {
         const extra = res.scatter_win > 0 ? " Bonus pay " + money(res.scatter_win) + " goog." : "";
         $("slot-win").textContent = res.scatters + " drooling cats!" + extra;
-        await sleep(1400);
+        if (window.Fx) window.Fx.announce("FREE GAMES!", res.free_spins + " free games, wins pay double");
+        await sleep(1900);
         await playFree(res, fast);
+        celebrate({ win: res.payout, bet: res.total_bet });
       } else if (res.payout > 0) {
         $("slot-win").textContent = "Win " + fmt.format(res.payout) + " goog";
+        celebrate({ win: res.payout, bet: res.total_bet });
       }
       const net = res.payout - res.total_bet;
       $("slots-lastwin").textContent = fmt.format(res.payout);
@@ -227,6 +234,7 @@
       highlightWins(f.grid, f.wins);
       running += Number(f.win);
       $("slot-win").textContent = f.win > 0 ? "+" + money(f.win) + " goog" : "No win";
+      if (f.win > 0) fx("coin");
       await sleep(f.win > 0 ? 900 : 450);
     }
     banner(res, "Free games finished. Free game wins: " + money(res.free_win) + " goog");
@@ -387,6 +395,7 @@
       const bet = readBet("tower-bet");
       const r = await rpc("tower_start", { p_bet: bet, p_diff: T.diff });
       applyBalance(r);
+      fx("start");
       T.over = null;
       T.st = { active: true, bet, tiles: r.tiles, traps: r.traps, rows: r.rows, level: 0, picks: [], mult: 1, next: r.next_multiplier };
       setMsg("tower-msg", "Pick a tile on the bottom floor. Avoid the spray bottles.");
@@ -403,14 +412,17 @@
       const r = await rpc("tower_pick", { p_tile: tile });
       applyBalance(r);
       if (r.hit) {
+        fx("splash"); if (window.Fx) window.Fx.shake(false);
         T.over = { masks: r.trap_masks, hitLevel: r.level, hitTile: tile, won: false };
         T.st = { ...T.st, active: false, picks: r.picks };
         setMsg("tower-msg", "💦 Spray bottle! The cat tumbled off. You lost " + fmt.format(T.st.bet) + " goog.", "error");
       } else if (r.done) {
+        celebrate({ win: r.payout, bet: T.st.bet });
         T.over = { masks: r.trap_masks, hitLevel: -1, hitTile: -1, won: true };
         T.st = { ...T.st, active: false, level: r.level, picks: r.picks, mult: r.multiplier, next: null };
         setMsg("tower-msg", "You reached the top! Cashed out ×" + Number(r.multiplier).toFixed(2) + " for " + fmt.format(r.payout) + " goog.", "ok");
       } else {
+        fx("step", r.level);
         T.st = { ...T.st, level: r.level, picks: r.picks, mult: r.multiplier, next: r.next_multiplier };
         setMsg("tower-msg", "");
       }
@@ -424,6 +436,7 @@
     try {
       const r = await rpc("tower_cashout");
       applyBalance(r);
+      celebrate({ win: r.payout, bet: T.st.bet });
       T.over = { masks: r.trap_masks, hitLevel: -1, hitTile: -1, won: true };
       T.st = { ...T.st, active: false, level: r.level, picks: r.picks, mult: r.multiplier, next: null };
       setMsg("tower-msg", "Cashed out ×" + Number(r.multiplier).toFixed(2) + " for " + fmt.format(r.payout) + " goog.", "ok");
@@ -603,6 +616,8 @@
       const step = (now) => {
         const t = Math.min(1, (now - t0) / dur), e = ease(t);
         R.wheel = w0 + (wEnd - w0) * e;
+        const tk = Math.floor(Math.sqrt(e) * 38);                    // wheel clicks, slowing down as the ball settles
+        if (tk !== R.lastTk) { R.lastTk = tk; fx("tick"); }
         const settle = Math.min(1, Math.max(0, (t - 0.55) / 0.45));
         R.ball = {
           angle: -Math.PI / 2 - (1 - e) * Math.PI * 14,
@@ -651,6 +666,7 @@
       if (hit) hit.classList.add("won");
       if (res.payout > 0) setMsg("roulette-msg", (net >= 0 ? "You won " + fmt.format(net) + " goog" : "You got back " + fmt.format(res.payout) + " goog (net " + fmt.format(net) + ")") + ".", net >= 0 ? "ok" : "");
       else setMsg("roulette-msg", "No win. You lost " + fmt.format(res.total_bet) + " goog.", "error");
+      if (res.payout > res.total_bet) celebrate({ win: res.payout, bet: res.total_bet }); else if (res.payout === 0) fx("lose"); else fx("coin");
       G.setBalance(res.balance);
       R.last = used;
       R.bets.clear(); R.order = [];
@@ -741,6 +757,7 @@
     const net = SC.won - SC.spent;
     const txt = n + " cards: " + SC.winners + " winner" + (SC.winners === 1 ? "" : "s") + ", won " + fmt.format(SC.won) + " of " + fmt.format(SC.spent) + " goog (" + (net >= 0 ? "+" : "") + fmt.format(net) + ").";
     setMsg("scratch-msg", txt, net > 0 ? "ok" : net < 0 ? "error" : "");
+    if (!SC.silent) { if (net > 0) celebrate({ win: SC.won, bet: SC.spent }); else if (SC.won === 0) fx("lose"); else fx("coin"); }
   }
   function revealCard() {
     const c = SC.card;
@@ -753,6 +770,7 @@
     });
     settle(res);
     const n = SC.queue.length, last = SC.idx === n - 1;
+    if (!SC.silent && (n === 1 || !last)) { if (res.payout > 0) celebrate({ win: res.payout, bet: res.price }); else fx("tick"); }
     if (n === 1) {
       if (res.payout > 0) setMsg("scratch-msg", "Three matching cats! ×" + res.multiplier + " wins " + fmt.format(res.payout) + " goog.", "ok");
       else setMsg("scratch-msg", "No match this time.", "error");
@@ -762,6 +780,8 @@
   }
   function revealAll() {                                               // finish the whole stack at once
     if (!SC.card) return;
+    const did = !SC.card.revealed || SC.idx < SC.queue.length - 1;     // is there anything left to reveal?
+    SC.silent = true;
     revealCard();
     while (SC.idx < SC.queue.length - 1) {
       showCard(SC.idx + 1, true);
@@ -769,7 +789,9 @@
       settle(c.res);
       document.querySelectorAll("#scratch-grid .s-cell").forEach((d) => { if (c.res.win_symbol && Number(d.dataset.sym) === c.res.win_symbol) d.classList.add("win"); });
     }
-    if (SC.queue.length > 1) summary();
+    SC.silent = false;
+    if (SC.queue.length > 1) { if (did) summary(); }
+    else if (did && SC.card.res.payout > 0) celebrate({ win: SC.card.res.payout, bet: SC.card.res.price });
     scButtons();
   }
 
@@ -784,6 +806,7 @@
   function scratchAt(e) {
     const r = sCanvas.getBoundingClientRect();
     const x = e.clientX - r.left, y = e.clientY - r.top;
+    fx("scratch");
     sCtx.globalCompositeOperation = "destination-out";
     sCtx.beginPath(); sCtx.arc(x, y, 20, 0, Math.PI * 2); sCtx.fill();
     if (SC.last) {

@@ -354,6 +354,7 @@
     if (window.GoogExtras) window.GoogExtras.onSession(session);
     await mine;
     renderNav();
+    if (window.GoogExtras) window.GoogExtras.earnBar();
     if (current === "profile") renderProfile();
     // warm the browser cache with the cat pictures so slots, tower and scratch cards never wait on them
     const warm = () => { for (let i = 1; i <= CAT_COUNT; i++) { const im = new Image(); im.src = catUrl(i); } new Image().src = "assets/cats/plink.jpg"; new Image().src = "assets/cats/drooling.jpg"; };
