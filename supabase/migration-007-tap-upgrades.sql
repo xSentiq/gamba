@@ -8,7 +8,7 @@
 -- Settings (change the numbers here to tune the economy)
 -- ---------------------------------------------------------------------------------------------------
 create or replace function public.tap_seconds(lvl int) returns int language sql immutable as $$ select 15 + 3 * lvl $$;          -- 15 s .. 30 s
-create or replace function public.tap_milli_per_tap(lvl int) returns int language sql immutable as $$ select 8 + 4 * lvl $$;      -- 0.008 .. 0.028 goog per tap
+create or replace function public.tap_milli_per_tap(lvl int) returns int language sql immutable as $$ select (array[8, 15, 25, 40, 65, 100])[lvl + 1] $$;   -- thousandths of a goog per tap: 0.8 up to 10 goog per 100 taps
 create or replace function public.tap_max_cps() returns int language sql immutable as $$ select 12 $$;                           -- taps per second a human can reach
 create or replace function public.tap_max_level(kind text) returns int language sql immutable as $$
   select case kind when 'time' then 5 when 'value' then 5 else 0 end $$;

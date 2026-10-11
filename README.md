@@ -62,7 +62,7 @@ The Plink cat is only used in Plinko and the drooling cat only in the slots; the
 ## Sound and animations (branch `sound-fx`)
 - **Sounds** are synthesized in the browser (no audio files). A speaker button in the top bar mutes everything; the choice is remembered.
 - **Win animations** scale with the win: small coin sparkles, confetti, a "BIG WIN" banner with a counting number and screen shake, and "MEGA WIN" for 50× or more. They respect the "reduce motion" setting. Losses get a short soft sound only.
-- **Tap the goog** earns goog when you are logged in (0.8 goog per 100 taps to start, no daily limit). Upgrades: longer rounds and more goog per tap (up to 2.8 per 100). The server counts the taps and limits them to what a human can tap. Tune it at the top of migration 007.
+- **Tap the goog** earns goog when you are logged in (0.8 goog per 100 taps to start, no daily limit). Upgrades: longer rounds and more goog per tap (up to 10 goog per 100 taps at the top level). The server counts the taps and limits them to what a human can tap. Tune it at the top of migration 007.
 
 ## Daily bonus and rescue
 - **Daily bonus:** 25 goog on the first login of each calendar day (Berlin time).
