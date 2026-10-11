@@ -18,7 +18,7 @@
       document.documentElement.setAttribute("data-theme", t);
       try { var hu = localStorage.getItem("goog-hue"); if (hu !== null && hu !== "") { document.documentElement.setAttribute("data-hue", ""); document.documentElement.style.setProperty("--hue", hu); } } catch (e) {} })();
   </script>
-  <link rel="stylesheet" href="style.css?v=12">
+  <link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
   <header class="top">
@@ -57,6 +57,25 @@
       <div id="games-hub">
         <h1>Games</h1>
         <p class="sub">Bet goog and cash out in time. Every round is decided on the server, so nobody can cheat.</p>
+
+        <section id="today-panel" class="card today" aria-labelledby="today-title" hidden>
+          <div class="today-head">
+            <h2 id="today-title">Challenges</h2>
+            <p id="today-bonus" class="today-bonus"></p>
+          </div>
+          <div class="today-cols">
+            <div>
+              <h3>Daily <small id="today-daily-reset"></small></h3>
+              <ul id="today-daily" class="challenge-list"></ul>
+            </div>
+            <div>
+              <h3>Weekly <small id="today-weekly-reset"></small></h3>
+              <ul id="today-weekly" class="challenge-list"></ul>
+            </div>
+          </div>
+          <p class="today-foot"><a href="#board" id="today-board-link">Weekly leaderboard &rarr;</a></p>
+        </section>
+
         <div class="hub">
           <a class="hub-card" href="#games/slots"><img class="hub-cat" src="assets/cats/drooling.jpg" alt=""><span class="tag">Slots</span><h2>Cat Slots</h2><p>Match cats on up to 20 lines. Three drooling cats start free games with double wins.</p></a>
           <a class="hub-card" href="#games/mines"><img class="hub-cat" src="assets/cats/slotcat_4.jpg" alt=""><span class="tag">Mines</span><h2>Cucumber Boxes</h2><p>Open boxes to find cats. Every cat raises your payout. Open a cucumber and the round is over.</p></a>
@@ -393,16 +412,32 @@
 
     <!-- LEADERBOARD -->
     <section id="view-board" hidden>
-      <h1>Richest accounts</h1>
-      <p class="sub">Top 25 by goog. Everyone starts with 100.</p>
-      <div class="ledger-wrap">
-        <table class="ledger">
-          <thead><tr><th scope="col">Rank</th><th scope="col">Account</th><th scope="col" class="num">goog</th></tr></thead>
-          <tbody id="board-body"></tbody>
-        </table>
+      <h1 id="board-title">Richest accounts</h1>
+      <div id="board-mode" class="seg compact" role="group" aria-label="Leaderboard">
+        <button type="button" data-bmode="rich" aria-pressed="true">Richest</button>
+        <button type="button" data-bmode="week" aria-pressed="false">This week</button>
       </div>
-      <p id="board-status" class="status" role="status"></p>
-      <button id="refresh" type="button" class="link">Refresh</button>
+      <div id="board-rich">
+        <p class="sub">Top 25 by goog. Everyone starts with 100.</p>
+        <div class="ledger-wrap">
+          <table class="ledger">
+            <thead><tr><th scope="col">Rank</th><th scope="col">Account</th><th scope="col" class="num">goog</th></tr></thead>
+            <tbody id="board-body"></tbody>
+          </table>
+        </div>
+        <p id="board-status" class="status" role="status"></p>
+        <button id="refresh" type="button" class="link">Refresh</button>
+      </div>
+      <div id="board-week" hidden>
+        <p class="sub" id="week-sub">Net goog won this week. Resets Monday at 00:00 UTC.</p>
+        <div class="ledger-wrap">
+          <table class="ledger">
+            <thead><tr><th scope="col">Rank</th><th scope="col">Account</th><th scope="col" class="num">Net</th><th scope="col" class="num hide-sm">Best win</th></tr></thead>
+            <tbody id="week-body"></tbody>
+          </table>
+        </div>
+        <p id="week-status" class="status" role="status"></p>
+      </div>
     </section>
 
     <!-- PROFILE -->
@@ -447,6 +482,37 @@
         <p id="me-status" class="status" role="status"></p>
       </div>
 
+      <div id="stats-card" class="card medium" hidden>
+        <h2>Your stats</h2>
+        <dl class="readout" id="stats-readout">
+          <div><dt>Rounds played</dt><dd id="stat-plays">0</dd></div>
+          <div><dt>Net goog</dt><dd id="stat-net">0</dd></div>
+          <div><dt>Wagered</dt><dd id="stat-wagered">0</dd></div>
+          <div><dt>Biggest win</dt><dd id="stat-biggest">–</dd></div>
+        </dl>
+        <p id="stat-biggest-sub" class="sub"></p>
+        <h3>Net goog per game</h3>
+        <div class="ledger-wrap">
+          <table class="ledger compact">
+            <thead><tr><th scope="col">Game</th><th scope="col" class="num">Rounds</th><th scope="col" class="num">Wagered</th><th scope="col" class="num">Net</th></tr></thead>
+            <tbody id="stats-games"></tbody>
+          </table>
+        </div>
+        <h3>Recent bets</h3>
+        <div class="ledger-wrap">
+          <table class="ledger compact">
+            <thead><tr><th scope="col">Game</th><th scope="col" class="num">Bet</th><th scope="col" class="num">Payout</th><th scope="col" class="num">Result</th><th scope="col" class="num hide-sm">When</th></tr></thead>
+            <tbody id="stats-recent"></tbody>
+          </table>
+        </div>
+        <p id="stats-status" class="status" role="status"></p>
+      </div>
+
+      <div id="ach-card" class="card medium" hidden>
+        <h2>Achievements <small id="ach-count"></small></h2>
+        <div id="ach-grid" class="ach-grid"></div>
+      </div>
+
       <div id="bg-card" class="card narrow" hidden>
         <h2>Background color</h2>
         <p class="sub">Pay 1 goog for a random color. You never know what you get, and a new roll replaces the old one.</p>
@@ -483,6 +549,7 @@
       <div class="tabs" role="tablist">
         <button id="atab-players" type="button" role="tab" aria-selected="true">Players</button>
         <button id="atab-drawings" type="button" role="tab" aria-selected="false">Drawings</button>
+        <button id="atab-returns" type="button" role="tab" aria-selected="false">Returns</button>
         <button id="atab-log" type="button" role="tab" aria-selected="false">Log</button>
       </div>
 
@@ -510,6 +577,21 @@
           <button type="button" data-dfilter="all" aria-pressed="false">All</button>
         </div>
         <div id="admin-drawings" class="drawing-grid"></div>
+      </div>
+
+      <div id="apanel-returns" hidden>
+        <p class="sub">What the games really paid back, counted from every settled round, against the target. <strong>Noise</strong> is how far the result can drift by pure luck: with few rounds, ignore the difference. Dice, Mines, Crash, Tower and Plinko round payouts down to whole goog, so small bets pay back a little less than the target.</p>
+        <div id="ret-range" class="seg compact" role="group" aria-label="Time range">
+          <button type="button" data-days="" aria-pressed="true">All time</button>
+          <button type="button" data-days="7" aria-pressed="false">7 days</button>
+          <button type="button" data-days="1" aria-pressed="false">24 hours</button>
+        </div>
+        <div class="ledger-wrap">
+          <table class="ledger admin-table">
+            <thead><tr><th scope="col">Game</th><th scope="col" class="num">Rounds</th><th scope="col" class="num">Wagered</th><th scope="col" class="num">Paid</th><th scope="col" class="num">Return</th><th scope="col" class="num">Target</th><th scope="col" class="num">Noise</th><th scope="col">Verdict</th></tr></thead>
+            <tbody id="admin-returns"></tbody>
+          </table>
+        </div>
       </div>
 
       <div id="apanel-log" hidden>
@@ -545,10 +627,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=12"></script>
-  <script src="fx.js?v=12"></script>
-  <script src="games.js?v=12"></script>
-  <script src="games2.js?v=12"></script>
-  <script src="extras.js?v=12"></script>
+  <script src="app.js?v=13"></script>
+  <script src="fx.js?v=13"></script>
+  <script src="games.js?v=13"></script>
+  <script src="games2.js?v=13"></script>
+  <script src="extras.js?v=13"></script>
+  <script src="stats.js?v=13"></script>
 </body>
 </html>

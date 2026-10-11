@@ -63,6 +63,7 @@
   async function rpc(name, args) {
     const { data, error } = await db.rpc(name, args || {});
     if (error) throw new Error(error.message);
+    if (window.GoogStats) window.GoogStats.collect(data);        // unlocked achievements / finished challenges
     return data;
   }
 
@@ -94,6 +95,7 @@
     setBalance(n) {
       if (me) { me.goog = n; renderNav(); }
       if (window.GoogExtras) window.GoogExtras.balanceChanged(n);
+      if (window.GoogStats) window.GoogStats.flush();
     },
   };
 
@@ -115,6 +117,7 @@
     const dl = $("nav-disclaimer"); if (dl) { if (name === "disclaimer") dl.setAttribute("aria-current", "page"); else dl.removeAttribute("aria-current"); }
     if (name === "board") loadBoard();
     if (name === "profile") renderProfile();
+    if (window.GoogStats) window.GoogStats.onRoute(name, sub);
     if (name === "admin" && window.GoogAdmin) window.GoogAdmin.show();
   }
   window.addEventListener("hashchange", route);
@@ -185,6 +188,7 @@
     $("me-goog").textContent = fmt.format(me.goog);
     $("avatar-remove").hidden = !me.avatar_version;
     paintBgCard();
+    if (window.GoogStats) window.GoogStats.renderProfile();
     const { count } = await db.from("profiles").select("id", { count: "exact", head: true }).gt("goog", me.goog);
     $("me-rank").textContent = count === null ? "" : "Rank #" + (count + 1);
   }
@@ -338,6 +342,7 @@
       await loadMe();
       renderNav();
       if (window.GoogExtras) window.GoogExtras.onSession(s);
+      if (window.GoogStats) window.GoogStats.onSession();
       if (current === "profile") renderProfile();
       if (current === "board") loadBoard();
       if (current === "games" && window.GoogGames) window.GoogGames.refresh();
@@ -355,6 +360,7 @@
     await mine;
     renderNav();
     if (window.GoogExtras) window.GoogExtras.earnBar();
+    if (window.GoogStats) window.GoogStats.onSession();
     if (current === "profile") renderProfile();
     // warm the browser cache with the cat pictures so slots, tower and scratch cards never wait on them
     const warm = () => { for (let i = 1; i <= CAT_COUNT; i++) { const im = new Image(); im.src = catUrl(i); } new Image().src = "assets/cats/plink.jpg"; new Image().src = "assets/cats/drooling.jpg"; };
