@@ -636,7 +636,7 @@
 
   // =====================================================================
   // Tap the goog. Free play for everyone; logged-in players earn a tiny amount of goog and can buy upgrades.
-  // The server (migration 007) decides the round length, limits the taps it will count and applies the daily cap.
+  // The server (migration 007) decides the round length, limits the taps it will count.
   // =====================================================================
   const TAP_FREE_MS = 15000;
   let tapTimer = null, tapEnd = 0, tapScore = 0, tapBest = 0, tapMs = TAP_FREE_MS, tapStreak = 0, tapLastAt = 0, tapStarting = false, tapInfoData = null;
@@ -654,20 +654,19 @@
   const UP = {
     time:  { title: "Longer rounds", note: (u) => "Round length: " + u.now + " s" + (u.next ? " → " + u.next + " s" : "") },
     value: { title: "More goog per tap", note: (u) => (u.now / 10).toFixed(1) + " goog per 100 taps" + (u.next ? " → " + (u.next / 10).toFixed(1) : "") },
-    cap:   { title: "Higher daily limit", note: (u) => "Daily limit: " + u.now + " goog" + (u.next ? " → " + u.next : "") },
   };
   function renderTapShop() {
     const d = tapInfoData, shop = $("tap-shop");
     shop.hidden = !(d && G.loggedIn());
     $("tap-sub").textContent = d && G.loggedIn()
-      ? "Tap the cat as often as you can before time runs out. Taps earn a tiny amount of goog (with a daily limit); upgrades add time and pay a little more."
+      ? "Tap the cat as often as you can before time runs out. Taps earn a small amount of goog; upgrades add time and pay more per tap."
       : "Tap the cat as often as you can before time runs out. Log in to earn a tiny amount of goog and buy upgrades.";
     if (shop.hidden) return;
-    $("tap-today").textContent = "Earned today: " + d.earned_today + " of " + d.daily_cap + " goog. Progress to the next goog: " + (d.carry_milli / 10).toFixed(0) + "%.";
+    $("tap-today").textContent = "Earned today: " + d.earned_today + " goog. Progress to the next goog: " + (d.carry_milli / 10).toFixed(0) + "%.";
     const box = $("tap-upgrades");
     box.replaceChildren();
     const me = G.me();
-    ["time", "value", "cap"].forEach((kind) => {
+    ["time", "value"].forEach((kind) => {
       const u = d.upgrades[kind];
       const row = document.createElement("div"); row.className = "tap-up";
       const txt = document.createElement("div");
@@ -755,7 +754,6 @@
         tapInfoData = r.info;
         if (r.paid > 0) { msg += " You earned " + r.paid + " goog."; fx("coin"); if (window.Fx) { window.Fx.pulseBalance(); } }
         else msg += " That adds up to part of a goog; it carries over.";
-        if (r.capped) msg += " Daily limit reached.";
         applyBalance(r);
       } catch (e) { msg += " (Could not save the round: " + e.message + ")"; }
       renderTapShop();
