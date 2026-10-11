@@ -16,6 +16,8 @@
     return data;
   }
   const applyBalance = (res) => { if (res && typeof res.balance === "number") G.setBalance(res.balance); };
+  const fx = (name, arg) => { if (window.Fx) window.Fx.sound(name, arg); };      // sound effects (fx.js)
+  const celebrate = (o) => { if (window.Fx) window.Fx.win(o); };                   // win animation (fx.js)
 
   function readBet(id) {
     const n = Math.floor(Number($(id).value));
@@ -127,6 +129,7 @@
       const mines = Number($("mines-count").value);
       const r = await rpc("mines_start", { p_bet: bet, p_mines: mines });
       applyBalance(r);
+      fx("start");
       renderMines({ active: true, bet, mines, revealed: [], mult: 1, next: r.next_multiplier });
       setMsg("mines-msg", "Open a box. Find cats, avoid the cucumbers.");
     } catch (e) { setMsg("mines-msg", e.message, "error"); }
@@ -142,12 +145,15 @@
       const r = await rpc("mines_reveal", { p_tile: tile });
       applyBalance(r);
       if (r.hit) {
+        fx("explode"); if (window.Fx) window.Fx.shake(false);
         renderMines({ active: false, bet: mSt.bet, mines: mSt.mines, revealed: r.revealed, mult: 0, cucumbers: r.mine_tiles }, tile);
         setMsg("mines-msg", "🥒 A cucumber! The cat jumped away. You lost " + fmt.format(mSt.bet) + " goog.", "error");
       } else if (r.done) {
+        celebrate({ win: r.payout, bet: mSt.bet });
         renderMines({ active: false, bet: mSt.bet, mines: mSt.mines, revealed: r.revealed, mult: r.multiplier, cucumbers: r.mine_tiles });
         setMsg("mines-msg", "You found every cat! Cashed out ×" + Number(r.multiplier).toFixed(2) + " for " + fmt.format(r.payout) + " goog.", "ok");
       } else {
+        fx("pop", r.revealed.length);
         renderMines({ ...mSt, revealed: r.revealed, mult: r.multiplier, next: r.next_multiplier });
         setMsg("mines-msg", "");
       }
@@ -161,6 +167,7 @@
     try {
       const r = await rpc("mines_cashout");
       applyBalance(r);
+      celebrate({ win: r.payout, bet: mSt.bet });
       renderMines({ active: false, bet: mSt.bet, mines: mSt.mines, revealed: r.revealed, mult: r.multiplier, cucumbers: r.mine_tiles });
       setMsg("mines-msg", "Cashed out ×" + Number(r.multiplier).toFixed(2) + " for " + fmt.format(r.payout) + " goog.", "ok");
     } catch (e) { setMsg("mines-msg", e.message, "error"); }
@@ -279,6 +286,8 @@
   function crashLoop() {
     if (C.running) {
       C.shown = multAt((performance.now() - C.t0) / 1000);
+      const stepNow = Math.floor(C.shown * 4);                             // a rising tone every ×0.25
+      if (stepNow !== C.lastStep) { C.lastStep = stepNow; fx("rise", C.shown); }
       $("crash-cash").textContent = "Cash out " + fmt.format(Math.floor(C.bet * C.shown)) + " goog";
     }
     drawCrash();
@@ -293,6 +302,7 @@
     C.t0 = (sentAt + performance.now()) / 2 - s.elapsed_ms;
     C.bet = s.bet; C.running = true; C.end = null; C.shown = 1;
     crashCat.src = G.randCat();
+    C.lastStep = 0; fx("launch");
     setCrashButtons(true);
     C.raf = requestAnimationFrame(crashLoop);
     C.poll = setInterval(pollCrash, 400);
@@ -322,6 +332,7 @@
     $("crash-cash").textContent = "Cash out";
     if (crashed) setMsg("crash-msg", "💥 Crashed at ×" + Number(s.crash_point).toFixed(2) + ". You lost " + fmt.format(s.bet) + " goog.", "error");
     else setMsg("crash-msg", "Cashed out at ×" + mult.toFixed(2) + " for " + fmt.format(s.payout) + " goog. It would have crashed at ×" + Number(s.crash_point).toFixed(2) + ".", "ok");
+    if (crashed) { fx("explode"); if (window.Fx) window.Fx.shake(true); } else celebrate({ win: s.payout, bet: s.bet });
     applyBalance(s);
     C.raf = requestAnimationFrame(crashLoop);
   }
@@ -413,6 +424,7 @@
       marker.style.left = "calc(1.4rem + (100% - 2.8rem) * " + res.roll / 100 + ")";
       $("dice-number").className = "dice-number";
       await new Promise((r) => setTimeout(r, 750)); // let the cat land before showing the result
+      fx("thump");
       const num = $("dice-number");
       num.textContent = Number(res.roll).toFixed(2);
       num.classList.add(res.win ? "win" : "lose");
@@ -425,6 +437,7 @@
       const recent = $("dice-recent");
       recent.prepend(pill);
       while (recent.children.length > 12) recent.lastChild.remove();
+      if (res.win) celebrate({ win: res.payout, bet }); else fx("lose");
       applyBalance(res);
     } catch (e) { setMsg("dice-msg", e.message, "error"); }
     finally { diceBusy = false; $("dice-roll").disabled = false; }
@@ -525,10 +538,12 @@
       const path = b.path, seg = b.seg;
       const k = Math.min(path.length, Math.floor(el / seg));
       const f = Math.min(1, (el - k * seg) / seg);
+      if (k !== b.lastK) { b.lastK = k; if (k > 0 && k < path.length) fx("ping", k + b.rights[k]); }   // a ping at every peg
       if (k >= path.length) {
         if (el >= seg * path.length + 160) {                         // landed: light up its slot, remove the ball
           PL.balls = PL.balls.filter((x) => x !== b.pos);
           PL.hits.add(b.slot); PL.layer = null;
+          if (PL.table && PL.table[b.slot] >= 1) fx("pop", b.slot); else fx("tick");
           b.done();
           continue;
         }
@@ -613,16 +628,19 @@
       if (net > 0) setMsg("plinko-msg", label + "you won " + fmt.format(net) + " goog!", "ok");
       else if (net === 0) setMsg("plinko-msg", label + "you got your bet back.");
       else setMsg("plinko-msg", label + "you lost " + fmt.format(-net) + " goog.", "error");
+      if (net > 0) celebrate({ win: paid, bet: bet * drops.length }); else if (drops.length === 1) fx("lose");
       applyBalance({ balance });
     } catch (e) { setMsg("plinko-msg", e.message, "error"); }
     finally { plLock(false); plRender(); }
   };
 
   // =====================================================================
-  // Tap the goog (free play)
+  // Tap the goog. Free play for everyone; logged-in players earn a tiny amount of goog and can buy upgrades.
+  // The server (migration 007) decides the round length, limits the taps it will count and applies the daily cap.
   // =====================================================================
-  const DURATION = 15000;
-  let tapTimer = null, tapEnd = 0, tapScore = 0, tapBest = 0;
+  const TAP_FREE_MS = 15000;
+  let tapTimer = null, tapEnd = 0, tapScore = 0, tapBest = 0, tapMs = TAP_FREE_MS, tapStreak = 0, tapLastAt = 0, tapStarting = false, tapInfoData = null;
+  let tapEarning = false;                                            // is the current round a server round?
   try { tapBest = Number(localStorage.getItem("goog_tap_best")) || 0; } catch (_) {}
   $("g-best").textContent = tapBest;
 
@@ -632,19 +650,84 @@
     t.style.left = Math.random() * (arena.clientWidth - t.offsetWidth) + "px";
     t.style.top = Math.random() * (arena.clientHeight - t.offsetHeight) + "px";
   }
-  function tapStart() {
-    tapScore = 0;
-    $("g-score").textContent = 0;
-    $("g-start").hidden = true;
-    $("g-target").hidden = false;
-    setMsg("g-msg", "");
-    tapEnd = performance.now() + DURATION;
-    moveTarget();
-    tapTimer = setInterval(() => {
-      const left = Math.max(0, tapEnd - performance.now());
-      $("g-time").textContent = (left / 1000).toFixed(1);
-      if (left <= 0) tapFinish();
-    }, 100);
+
+  const UP = {
+    time:  { title: "Longer rounds", note: (u) => "Round length: " + u.now + " s" + (u.next ? " → " + u.next + " s" : "") },
+    value: { title: "More goog per tap", note: (u) => (u.now / 10).toFixed(1) + " goog per 100 taps" + (u.next ? " → " + (u.next / 10).toFixed(1) : "") },
+    cap:   { title: "Higher daily limit", note: (u) => "Daily limit: " + u.now + " goog" + (u.next ? " → " + u.next : "") },
+  };
+  function renderTapShop() {
+    const d = tapInfoData, shop = $("tap-shop");
+    shop.hidden = !(d && G.loggedIn());
+    $("tap-sub").textContent = d && G.loggedIn()
+      ? "Tap the cat as often as you can before time runs out. Taps earn a tiny amount of goog (with a daily limit); upgrades add time and pay a little more."
+      : "Tap the cat as often as you can before time runs out. Log in to earn a tiny amount of goog and buy upgrades.";
+    if (shop.hidden) return;
+    $("tap-today").textContent = "Earned today: " + d.earned_today + " of " + d.daily_cap + " goog. Progress to the next goog: " + (d.carry_milli / 10).toFixed(0) + "%.";
+    const box = $("tap-upgrades");
+    box.replaceChildren();
+    const me = G.me();
+    ["time", "value", "cap"].forEach((kind) => {
+      const u = d.upgrades[kind];
+      const row = document.createElement("div"); row.className = "tap-up";
+      const txt = document.createElement("div");
+      const t = document.createElement("strong"); t.textContent = UP[kind].title + "  ";
+      const pips = document.createElement("span"); pips.className = "pips";
+      for (let i = 0; i < u.max; i++) { const p = document.createElement("i"); if (i < u.level) p.className = "on"; pips.appendChild(p); }
+      const n = document.createElement("div"); n.className = "sub small"; n.textContent = UP[kind].note(u);
+      txt.append(t, pips, n);
+      const btn = document.createElement("button"); btn.type = "button"; btn.className = "btn small"; btn.setAttribute("data-nosound", "");
+      if (u.cost === null) { btn.textContent = "Max level"; btn.disabled = true; }
+      else { btn.textContent = "Buy for " + fmt.format(u.cost); btn.disabled = !!tapTimer || (me && me.goog < u.cost); }
+      btn.onclick = () => buyTap(kind, btn);
+      row.append(txt, btn);
+      box.appendChild(row);
+    });
+  }
+  async function loadTapInfo() {
+    if (!G.loggedIn()) { tapInfoData = null; renderTapShop(); return; }
+    try { tapInfoData = await rpc("tap_info"); $("g-time").textContent = tapInfoData.seconds.toFixed(1); }
+    catch (e) { tapInfoData = null; }                                // migration 007 not run yet: plain free play
+    renderTapShop();
+  }
+  async function buyTap(kind, btn) {
+    if (tapTimer) return;
+    btn.disabled = true;
+    try {
+      const r = await rpc("tap_buy", { p_kind: kind });
+      tapInfoData = r.info; fx("buy");
+      applyBalance(r);
+      $("g-time").textContent = tapInfoData.seconds.toFixed(1);
+      setMsg("g-msg", "Upgrade bought.", "ok");
+    } catch (e) { fx("deny"); setMsg("g-msg", e.message, "error"); }
+    renderTapShop();
+  }
+
+  async function tapStart() {
+    if (tapStarting || tapTimer) return;
+    tapStarting = true;
+    $("g-start").disabled = true;
+    try {
+      tapEarning = false; tapMs = TAP_FREE_MS;
+      if (G.loggedIn() && tapInfoData) {
+        try { const r = await rpc("tap_start"); tapMs = r.seconds * 1000; tapEarning = true; }
+        catch (e) { setMsg("g-msg", e.message + " Playing without earnings.", "error"); }
+      }
+      tapScore = 0; tapStreak = 0; tapLastAt = 0;
+      $("g-score").textContent = 0; $("g-streak").textContent = 0;
+      $("g-start").hidden = true;
+      $("g-target").hidden = false;
+      if (tapEarning) setMsg("g-msg", "");
+      tapEnd = performance.now() + tapMs;
+      fx("start");
+      moveTarget();
+      renderTapShop();
+      tapTimer = setInterval(() => {
+        const left = Math.max(0, tapEnd - performance.now());
+        $("g-time").textContent = (left / 1000).toFixed(1);
+        if (left <= 0) tapFinish();
+      }, 100);
+    } finally { tapStarting = false; $("g-start").disabled = false; }
   }
   function tapStop() {
     clearInterval(tapTimer);
@@ -652,17 +735,30 @@
     $("g-target").hidden = true;
     $("g-start").hidden = false;
     $("g-start").textContent = "Start";
-    $("g-time").textContent = (DURATION / 1000).toFixed(1);
+    $("g-time").textContent = ((tapInfoData && G.loggedIn() ? tapInfoData.seconds * 1000 : TAP_FREE_MS) / 1000).toFixed(1);
   }
-  function tapFinish() {
+  async function tapFinish() {
+    const earning = tapEarning, score = tapScore;
     tapStop();
+    tapEarning = false;
     $("g-start").textContent = "Play again";
-    let msg = "Time's up. You tapped " + tapScore + " time" + (tapScore === 1 ? "" : "s") + ".";
-    if (tapScore > tapBest) {
-      tapBest = tapScore;
+    let msg = "Time's up. You tapped " + score + " time" + (score === 1 ? "" : "s") + ".";
+    if (score > tapBest) {
+      tapBest = score;
       $("g-best").textContent = tapBest;
       try { localStorage.setItem("goog_tap_best", String(tapBest)); } catch (_) {}
       msg += " New best!";
+    }
+    if (earning) {
+      try {
+        const r = await rpc("tap_finish", { p_taps: score });
+        tapInfoData = r.info;
+        if (r.paid > 0) { msg += " You earned " + r.paid + " goog."; fx("coin"); if (window.Fx) { window.Fx.pulseBalance(); } }
+        else msg += " That adds up to part of a goog; it carries over.";
+        if (r.capped) msg += " Daily limit reached.";
+        applyBalance(r);
+      } catch (e) { msg += " (Could not save the round: " + e.message + ")"; }
+      renderTapShop();
     }
     setMsg("g-msg", msg, "ok");
   }
@@ -670,8 +766,13 @@
   $("g-target").addEventListener("pointerdown", (e) => {
     e.preventDefault();
     if (!tapTimer) return;
+    const now = performance.now();
+    tapStreak = now - tapLastAt < 450 ? tapStreak + 1 : 1; tapLastAt = now;   // cosmetic streak: taps in quick succession
     tapScore += 1;
     $("g-score").textContent = tapScore;
+    $("g-streak").textContent = tapStreak;
+    fx("pop", Math.min(tapStreak, 14));
+    if (window.Fx) { const r = e.target.getBoundingClientRect(); window.Fx.emit(3, r.left + r.width / 2, r.top + r.height / 2, { angle: -Math.PI / 2, spread: Math.PI, speed: 5, coins: 0.5, life: 35 }); }
     moveTarget();
   });
 
@@ -702,6 +803,7 @@
     PANELS.forEach((p) => ($("game-" + p).hidden = p !== activeSub));
     leave();
     applyGates();
+    if (activeSub === "tap") loadTapInfo();
     if (!G.loggedIn()) { renderMines(null); crashIdle(); return; }
     if (plugins[activeSub]) plugins[activeSub].show();
     if (activeSub === "mines") minesResume();

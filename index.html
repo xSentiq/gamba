@@ -18,7 +18,7 @@
       document.documentElement.setAttribute("data-theme", t);
       try { var hu = localStorage.getItem("goog-hue"); if (hu !== null && hu !== "") { document.documentElement.setAttribute("data-hue", ""); document.documentElement.style.setProperty("--hue", hu); } } catch (e) {} })();
   </script>
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
   <header class="top">
@@ -30,6 +30,7 @@
       <a href="#admin" data-view="admin" id="nav-admin" hidden>Admin</a>
     </nav>
     <div class="right">
+      <button id="sound-toggle" type="button" class="theme-btn" aria-label="Sound on or off" title="Sound"></button>
       <a id="nav-disclaimer" class="disc-link" href="#disclaimer">Disclaimer</a>
       <button id="theme-toggle" type="button" class="theme-btn" aria-label="Switch between light and dark mode" title="Light / dark"></button>
       <span id="balance" class="balance" hidden></span>
@@ -363,17 +364,24 @@
       <!-- Tap the goog (free play) -->
       <article id="game-tap" class="game card" hidden>
         <h2>Tap the goog</h2>
-        <p class="sub">Tap the cat as often as you can in 15 seconds. Free play, no goog involved.</p>
+        <p id="tap-sub" class="sub">Tap the cat as often as you can before time runs out. Log in to earn a tiny amount of goog and buy upgrades.</p>
         <div class="hud">
           <span>Time <strong id="g-time">15.0</strong></span>
           <span>Score <strong id="g-score">0</strong></span>
+          <span>Streak <strong id="g-streak">0</strong></span>
           <span>Best <strong id="g-best">0</strong></span>
         </div>
         <div id="arena" class="arena">
-          <button id="g-target" class="target" type="button" aria-label="Tap the goog" hidden><img src="assets/cats/slotcat_1.jpg" alt=""></button>
+          <button id="g-target" class="target" type="button" aria-label="Tap the goog" data-nosound hidden><img src="assets/cats/slotcat_1.jpg" alt=""></button>
           <button id="g-start" class="btn" type="button">Start</button>
         </div>
         <p id="g-msg" class="status" role="status"></p>
+        <div id="tap-shop" class="tap-shop" hidden>
+          <h3>Upgrades</h3>
+          <p id="tap-today" class="sub small"></p>
+          <div id="tap-upgrades" class="tap-upgrades"></div>
+          <p class="sub small">Earnings stay small on purpose: taps pay a fraction of a goog, and there is a daily limit.</p>
+        </div>
       </article>
     </section>
 
@@ -531,9 +539,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=6"></script>
-  <script src="games.js?v=6"></script>
-  <script src="games2.js?v=6"></script>
-  <script src="extras.js?v=6"></script>
+  <script src="app.js?v=8"></script>
+  <script src="fx.js?v=8"></script>
+  <script src="games.js?v=8"></script>
+  <script src="games2.js?v=8"></script>
+  <script src="extras.js?v=8"></script>
 </body>
 </html>

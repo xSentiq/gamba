@@ -15,6 +15,7 @@ A small website with accounts, a `goog` currency (everyone starts with 100, the 
    3. `supabase/migration-004-economy.sql` (daily bonus, draw-a-cat rescue, admin tools)
    4. `supabase/migration-005-more-games.sql` (slots, tower, roulette, scratch cards)
    5. `supabase/migration-006-extras.sql` (multi-drop Plinko, buying several scratch cards, background color gamble)
+   6. `supabase/migration-007-tap-upgrades.sql` (Tap the goog earnings and upgrade shop; only on the `sound-fx` branch)
 
    Only if you ran an old `schema.sql` from before profile pictures existed: run `migration-002-avatars.sql` first.
 3. Open **Project Settings → API** and copy the *Project URL* and the *anon public* key into `config.js`.
@@ -58,6 +59,11 @@ The Plink cat is only used in Plinko and the drooling cat only in the slots; the
 - **Background color:** Profile → Background color. 1 goog buys a random color (a hue stored on your account, applied in both modes); "Back to default" is free. Price: `bg_color_price()` in migration 006.
 - **Disclaimer:** link at the top right. Edit the text in `index.html` (`#view-disclaimer`).
 
+## Sound and animations (branch `sound-fx`)
+- **Sounds** are synthesized in the browser (no audio files). A speaker button in the top bar mutes everything; the choice is remembered.
+- **Win animations** scale with the win: small coin sparkles, confetti, a "BIG WIN" banner with a counting number and screen shake, and "MEGA WIN" for 50× or more. They respect the "reduce motion" setting. Losses get a short soft sound only.
+- **Tap the goog** earns a tiny amount of goog when you are logged in (0.5 goog per 100 taps, max 15 goog per day to start). Upgrades: longer rounds, more goog per tap, higher daily limit. The server counts the taps, limits them to what a human can tap, and enforces the daily cap. Tune it at the top of migration 007.
+
 ## Daily bonus and rescue
 - **Daily bonus:** 25 goog on the first login of each calendar day (Berlin time).
 - **Rescue:** below 10 goog a bar offers +10 goog for drawing a cat. The drawing is saved (Admin → Drawings) and, if email is set up, mailed to xsentiq@gmail.com. A note tells the player the goog may be taken back if the drawing isn't good enough; **Reject** in the admin panel removes it again (never below 0). Cooldown: 6 hours.
@@ -87,6 +93,7 @@ The anon key in `config.js` is public by design. Row Level Security lets the bro
 ## Files
 - `index.html`, `style.css`: page and look
 - `app.js`: accounts, navigation, leaderboard, profile
+- `fx.js`: sounds and win animations
 - `games.js`: Mines, Crash, Dice, Plinko, Tap
 - `games2.js`: slots, tower, roulette, scratch cards
 - `extras.js`: daily bonus, rescue drawing, admin panel
