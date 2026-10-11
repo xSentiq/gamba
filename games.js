@@ -10,11 +10,7 @@
   const setMsg = (id, text, kind = "") => G.setStatus($(id), text, kind);
 
   // ---------- shared ----------
-  async function rpc(name, args) {
-    const { data, error } = await db.rpc(name, args || {});
-    if (error) throw new Error(error.message);
-    return data;
-  }
+  const rpc = G.rpc;                                       // shared helper (also hands server events to stats.js)
   const applyBalance = (res) => { if (res && typeof res.balance === "number") G.setBalance(res.balance); };
   const fx = (name, arg) => { if (window.Fx) window.Fx.sound(name, arg); };      // sound effects (fx.js)
   const celebrate = (o) => { if (window.Fx) window.Fx.win(o); };                   // win animation (fx.js)

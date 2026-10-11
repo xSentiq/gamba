@@ -80,7 +80,7 @@
     E.timer = setTimeout(() => refreshStatus(false), 700);   // let the game animation finish before the bar appears
   }
 
-  window.GoogExtras = { onSession, balanceChanged, refreshStatus, earnBar };
+  window.GoogExtras = { onSession, balanceChanged, refreshStatus, earnBar, status: () => E.status };
 
   // ---------- draw a cat ----------
   const dlg = $("draw-dialog");
@@ -178,6 +178,7 @@
 
   // ---------- admin panel ----------
   const A = { tab: "players", q: "", filter: "pending" };
+  const TABS = ["players", "drawings", "returns", "log"];
   const msg = (t, k) => setMsg("admin-msg", t, k);
   const when = (iso) => new Date(iso).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" });
 
@@ -193,18 +194,19 @@
 
   function setTab(t) {
     A.tab = t;
-    ["players", "drawings", "log"].forEach((x) => {
+    TABS.forEach((x) => {
       $("atab-" + x).setAttribute("aria-selected", String(x === t));
       $("apanel-" + x).hidden = x !== t;
     });
     msg("");
     loadTab();
   }
-  ["players", "drawings", "log"].forEach((t) => ($("atab-" + t).onclick = () => setTab(t)));
+  TABS.forEach((t) => ($("atab-" + t).onclick = () => setTab(t)));
 
   function loadTab() {
     if (A.tab === "players") return loadUsers();
     if (A.tab === "drawings") return loadDrawings();
+    if (A.tab === "returns") return window.GoogStats ? window.GoogStats.adminReturns(msg) : undefined;
     return loadLog();
   }
 

@@ -15,7 +15,8 @@ A small website with accounts, a `goog` currency (everyone starts with 100, the 
    3. `supabase/migration-004-economy.sql` (daily bonus, draw-a-cat rescue, admin tools)
    4. `supabase/migration-005-more-games.sql` (slots, tower, roulette, scratch cards)
    5. `supabase/migration-006-extras.sql` (multi-drop Plinko, buying several scratch cards, background color gamble)
-   6. `supabase/migration-007-tap-upgrades.sql` (Tap the goog earnings and upgrade shop; only on the `sound-fx` branch)
+   6. `supabase/migration-007-tap-upgrades.sql` (Tap the goog earnings and upgrade shop)
+   7. `supabase/migration-008-stats-achievements.sql` (play log, stats, achievements, daily/weekly challenges, weekly leaderboard)
 
    Only if you ran an old `schema.sql` from before profile pictures existed: run `migration-002-avatars.sql` first.
 3. Open **Project Settings → API** and copy the *Project URL* and the *anon public* key into `config.js`.
@@ -53,6 +54,14 @@ All bets and payouts are decided inside the database; the browser only animates 
 | Tap the goog | | free play |
 
 The Plink cat is only used in Plinko and the drooling cat only in the slots; the other cats appear everywhere else.
+
+## Stats, achievements and challenges
+Every settled round of the 8 games is written to `game_plays` by the same server functions that pay the winnings (so it cannot be faked); the browser has no access to the table. Tap the goog is not a bet and is not logged.
+- **Profile:** your rounds, wagered, net goog (per game), biggest win, the last 15 bets, and the achievement badges (locked and unlocked).
+- **Achievements:** unlocked on the server when a round settles, small goog reward each, a toast and the win sound on unlock. Edit them in `achievement_defs` (migration 008).
+- **Challenges:** a panel on the Games page, with progress bars. 3 daily (reset 00:00 UTC) and 3 weekly (reset Monday 00:00 UTC) challenges, chosen from a pool by date; the goog reward is paid when the last step settles. Edit the pool in `challenge_defs`.
+- **Weekly leaderboard:** Leaderboard, "This week": net goog won this week, top 10, resets with the weekly challenges. Logged-in players only.
+- **Admin, Returns tab:** real payout of each game against the target (99%, roulette 97.3%), all time / 7 days / 24 hours, with the expected random noise.
 
 ## Look and extras
 - **Light / dark mode:** button in the top bar (white light mode, purple dark mode), remembered per device.
@@ -97,6 +106,7 @@ The anon key in `config.js` is public by design. Row Level Security lets the bro
 - `games.js`: Mines, Crash, Dice, Plinko, Tap
 - `games2.js`: slots, tower, roulette, scratch cards
 - `extras.js`: daily bonus, rescue drawing, admin panel
+- `stats.js`: profile stats, achievements, challenges panel, weekly leaderboard, admin returns
 - `config.js`: your Supabase URL and anon key
 - `assets/`: coin, favicon, `cats/` (slotcat_1–6, plink, drooling_cat)
-- `supabase/`: `schema.sql`, `migration-002` … `migration-006`
+- `supabase/`: `schema.sql`, `migration-002` … `migration-008`
