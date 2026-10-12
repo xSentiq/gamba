@@ -18,7 +18,8 @@
       document.documentElement.setAttribute("data-theme", t);
       try { var hu = localStorage.getItem("goog-hue"); if (hu !== null && hu !== "") { document.documentElement.setAttribute("data-hue", ""); document.documentElement.style.setProperty("--hue", hu); } } catch (e) {} })();
   </script>
-  <link rel="stylesheet" href="style.css?v=17">
+  <link rel="stylesheet" href="style.css?v=18">
+  <link rel="stylesheet" href="casino.css?v=18">
 </head>
 <body>
   <header class="top">
@@ -77,6 +78,12 @@
           <p class="today-foot"><a href="#board" id="today-board-link">Weekly leaderboard &rarr;</a></p>
         </section>
 
+        <div class="lobby-hero">
+          <h2>Play with goog</h2>
+          <p>Play money only. Fair odds, settled on the server.</p>
+          <img src="assets/cats/slotcat_3.jpg" alt="">
+        </div>
+        <h2 class="lobby-title">All games</h2>
         <div class="hub">
           <a class="hub-card" href="#games/slots"><img class="hub-cat" src="assets/cats/drooling.jpg" alt=""><span class="tag">Slots</span><h2>Cat Slots</h2><p>Match cats on up to 20 lines. Three drooling cats start free games with double wins.</p></a>
           <a class="hub-card" href="#games/mines"><img class="hub-cat" src="assets/cats/slotcat_4.jpg" alt=""><span class="tag">Mines</span><h2>Cucumber Boxes</h2><p>Open boxes to find cats. Every cat raises your payout. Open a cucumber and the round is over.</p></a>
@@ -647,12 +654,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=17"></script>
-  <script src="fx.js?v=17"></script>
-  <script src="music.js?v=17"></script>
-  <script src="games.js?v=17"></script>
-  <script src="games2.js?v=17"></script>
-  <script src="extras.js?v=17"></script>
-  <script src="stats.js?v=17"></script>
+  <script src="app.js?v=18"></script>
+  <script src="fx.js?v=18"></script>
+  <script src="music.js?v=18"></script>
+  <script src="games.js?v=18"></script>
+  <script src="games2.js?v=18"></script>
+  <script src="extras.js?v=18"></script>
+  <script src="stats.js?v=18"></script>
 </body>
 </html>

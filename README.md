@@ -113,4 +113,5 @@ The anon key in `config.js` is public by design. Row Level Security lets the bro
 - `stats.js`: profile stats, achievements, challenges panel, weekly leaderboard, admin returns
 - `config.js`: your Supabase URL and anon key
 - `assets/`: coin, favicon, `cats/` (slotcat_1–6, plink, drooling_cat)
+- `casino.css`: the casino-app look (navy and green, bottom tab bar on phones, game tiles, win banner), loaded after `style.css`
 - `supabase/`: `schema.sql`, `migration-002` … `migration-009`

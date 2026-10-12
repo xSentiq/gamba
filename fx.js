@@ -70,12 +70,20 @@
   const throttle = (ms) => { const n = performance.now(); if (n - lastTick < ms) return true; lastTick = n; return false; };
 
   const SOUNDS = {
-    click() { tone(660, 0, 0.045, { type: "square", vol: 0.05 }); },
+    // chip clack: a short tick with a soft body, like a casino-app button
+    click() { tone(1100, 0, 0.03, { type: "triangle", vol: 0.07 }); tone(420, 0, 0.05, { type: "sine", vol: 0.08, slide: 260 }); noise(0, 0.02, { filter: "highpass", freq: 3000, vol: 0.05 }); },
     pop(n) { tone(climb(n || 0), 0, 0.12, { type: "triangle", vol: 0.22 }); tone(climb(n || 0) * 2, 0, 0.06, { type: "sine", vol: 0.07 }); },
     tick() { tone(1700, 0, 0.02, { type: "square", vol: 0.04 }); },
     thump() { tone(150, 0, 0.14, { type: "sine", vol: 0.35, slide: 55 }); noise(0, 0.07, { freq: 400, vol: 0.12 }); },
     ping(i) { tone(520 + ((i || 0) % 9) * 55, 0, 0.09, { type: "sine", vol: 0.1 }); },
-    coin() { tone(1319, 0, 0.07, { type: "square", vol: 0.08 }); tone(1760, 0.06, 0.28, { type: "triangle", vol: 0.14 }); },
+    // "ka-ching": two bright metallic notes with a shimmer
+    coin() {
+      tone(1568, 0, 0.09, { type: "square", vol: 0.06 }); tone(2093, 0.07, 0.4, { type: "triangle", vol: 0.14 });
+      tone(3136, 0.07, 0.3, { type: "sine", vol: 0.06 }); tone(4186, 0.09, 0.2, { type: "sine", vol: 0.03 });
+    },
+    // a handful of coins dropping into a tray
+    coins(n) { for (let i = 0; i < (n || 8); i++) { const t = i * 0.045 + Math.random() * 0.02; tone(2200 + Math.random() * 1800, t, 0.09, { type: "triangle", vol: 0.06 }); tone(3300 + Math.random() * 1500, t + 0.01, 0.05, { type: "sine", vol: 0.03 }); } },
+    bell() { [880, 1320, 1760].forEach((f, i) => tone(f, 0, 0.9 - i * 0.2, { type: "sine", vol: 0.11 / (i + 1) })); },
     start() { tone(330, 0, 0.08, { type: "triangle", vol: 0.15 }); tone(495, 0.07, 0.12, { type: "triangle", vol: 0.15 }); },
     lose() { tone(330, 0, 0.28, { type: "sine", vol: 0.11, slide: 200 }); },
     explode() { noise(0, 0.5, { freq: 2200, sweep: 80, vol: 0.4 }); tone(110, 0, 0.45, { type: "sine", vol: 0.3, slide: 40 }); },
@@ -102,9 +110,10 @@
         tone(note(semi), i * gap, 0.3 + (tier >= 3 ? 0.15 : 0), { type: "triangle", vol: 0.17 });
         tone(note(semi + 12), i * gap, 0.2, { type: "sine", vol: 0.06 });
       });
+      if (tier >= 1) { SOUNDS.bell(); SOUNDS.coins(tier * 6 + 4); }
       if (tier >= 2) for (let i = 0; i < 6 + tier * 3; i++) tone(1800 + Math.random() * 2200, 0.1 + i * 0.06, 0.07, { type: "sine", vol: 0.05 });   // sparkle
       if (tier >= 3) { tone(note(-24), 0, 0.5, { type: "sine", vol: 0.3 }); noise(0, 0.25, { freq: 4000, sweep: 800, vol: 0.12 }); }
-      if (tier >= 4) { [0, 0.18, 0.36].forEach((d) => tone(note(12 + d * 20), d + 0.45, 0.4, { type: "square", vol: 0.06 })); }
+      if (tier >= 4) { [0, 0.18, 0.36].forEach((d) => tone(note(12 + d * 20), d + 0.45, 0.4, { type: "square", vol: 0.06 })); [0, 4, 7, 12].forEach((semi) => tone(note(semi - 12), 0.6, 0.9, { type: "sawtooth", vol: 0.05 })); SOUNDS.coins(30); }   // brass stab and a coin shower
     },
     bigAnnounce() { tone(note(-12), 0, 0.5, { type: "sawtooth", vol: 0.1, slide: note(0) }); },
   };
