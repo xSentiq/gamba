@@ -145,8 +145,9 @@
 
   function tick() {
     const c = S.c; if (!c) return;
-    const horizon = c.currentTime + 0.9;
-    for (let guard = 0; guard < 400; guard++) {
+    // a hidden tab only gets a timer tick about once a second (once a minute after a few minutes), so schedule far ahead there
+    const horizon = c.currentTime + (document.hidden ? 75 : 0.9);
+    for (let guard = 0; guard < 6000; guard++) {
       const e = EVENTS[S.idx], t = S.t0 + e.b * BEAT;
       if (t > horizon) break;
       if (t >= c.currentTime - 0.02) play(S.G, e, Math.max(t, c.currentTime));
@@ -225,11 +226,11 @@
   window.addEventListener("pointerdown", first, true);
   window.addEventListener("keydown", first, true);
 
-  // pause while the tab is in the background
-  let wasOn = false;
+  // keep playing in the background: nothing is stopped or restarted, the schedule just runs further ahead while hidden
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) { wasOn = S.on; if (S.on) { stop(); paint(); } }
-    else if (wasOn && pref !== "0") { start(); paint(); wasOn = false; }
+    if (!S.on) return;
+    try { if (S.c && S.c.state === "suspended") S.c.resume().catch(() => {}); } catch (e) {}
+    tick();
   });
 
   window.Music = {

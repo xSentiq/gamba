@@ -18,7 +18,7 @@
       document.documentElement.setAttribute("data-theme", t);
       try { var hu = localStorage.getItem("goog-hue"); if (hu !== null && hu !== "") { document.documentElement.setAttribute("data-hue", ""); document.documentElement.style.setProperty("--hue", hu); } } catch (e) {} })();
   </script>
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
   <header class="top">
@@ -390,7 +390,11 @@
       <!-- Tap the goog (free play) -->
       <article id="game-tap" class="game card" hidden>
         <h2>Tap the goog</h2>
-        <p id="tap-sub" class="sub">Tap the cat as often as you can before time runs out. Log in to earn a tiny amount of goog and buy upgrades.</p>
+        <p id="tap-sub" class="sub">Tap the cat as often as you can. The clock starts with your first tap, and every tap gives you 0.1 s back. Log in to earn a tiny amount of goog, buy upgrades and join the leaderboard.</p>
+        <div id="tap-mode" class="seg compact" role="group" aria-label="Run type" hidden>
+          <button type="button" data-tmode="up" aria-pressed="true">With upgrades</button>
+          <button type="button" data-tmode="fair" aria-pressed="false">Fair run (no upgrades)</button>
+        </div>
         <div class="hud">
           <span>Time <strong id="g-time">15.0</strong></span>
           <span>Score <strong id="g-score">0</strong></span>
@@ -407,6 +411,21 @@
           <p id="tap-today" class="sub small"></p>
           <div id="tap-upgrades" class="tap-upgrades"></div>
           <p class="sub small">Taps pay a fraction of a goog each, and it adds up.</p>
+        </div>
+        <div id="tap-board" class="tap-shop">
+          <h3>Leaderboard</h3>
+          <div id="tap-board-mode" class="seg compact" role="group" aria-label="Tap leaderboard">
+            <button type="button" data-tbmode="fair" aria-pressed="true">Fair runs</button>
+            <button type="button" data-tbmode="up" aria-pressed="false">With upgrades</button>
+          </div>
+          <p id="tap-board-sub" class="sub small">Best run per player. Fair runs ignore upgrades, so everyone has the same 15 seconds.</p>
+          <div class="ledger-wrap">
+            <table class="ledger">
+              <thead><tr><th>#</th><th>Player</th><th class="num">Taps</th></tr></thead>
+              <tbody id="tap-board-body"></tbody>
+            </table>
+          </div>
+          <p id="tap-board-status" class="status" role="status"></p>
         </div>
       </article>
     </section>
@@ -628,12 +647,12 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
-  <script src="app.js?v=14"></script>
-  <script src="fx.js?v=14"></script>
-  <script src="music.js?v=14"></script>
-  <script src="games.js?v=14"></script>
-  <script src="games2.js?v=14"></script>
-  <script src="extras.js?v=14"></script>
-  <script src="stats.js?v=14"></script>
+  <script src="app.js?v=15"></script>
+  <script src="fx.js?v=15"></script>
+  <script src="music.js?v=15"></script>
+  <script src="games.js?v=15"></script>
+  <script src="games2.js?v=15"></script>
+  <script src="extras.js?v=15"></script>
+  <script src="stats.js?v=15"></script>
 </body>
 </html>
