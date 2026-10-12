@@ -17,6 +17,7 @@ A small website with accounts, a `goog` currency (everyone starts with 100, the 
    5. `supabase/migration-006-extras.sql` (multi-drop Plinko, buying several scratch cards, background color gamble)
    6. `supabase/migration-007-tap-upgrades.sql` (Tap the goog earnings and upgrade shop)
    7. `supabase/migration-008-stats-achievements.sql` (play log, stats, achievements, daily/weekly challenges, weekly leaderboard)
+   8. `supabase/migration-009-tap-leaderboard.sql` (Tap the goog leaderboard, fair runs, time back per tap)
 
    Only if you ran an old `schema.sql` from before profile pictures existed: run `migration-002-avatars.sql` first.
 3. Open **Project Settings → API** and copy the *Project URL* and the *anon public* key into `config.js`.
@@ -73,6 +74,7 @@ Every settled round of the 8 games is written to `game_plays` by the same server
 - **Sounds** are synthesized in the browser (no audio files). A speaker button in the top bar mutes everything; the choice is remembered.
 - **Win animations** scale with the win: small coin sparkles, confetti, a "BIG WIN" banner with a counting number and screen shake, and "MEGA WIN" for 50× or more. They respect the "reduce motion" setting. Losses get a short soft sound only.
 - **Tap the goog** earns goog when you are logged in (0.8 goog per 100 taps to start, no daily limit). Upgrades: longer rounds and more goog per tap (up to 10 goog per 100 taps at the top level). The server counts the taps and limits them to what a human can tap. Tune it at the top of migration 007.
+  The clock starts with your first tap and each tap gives 0.1 s back (at most 30 s per run, `tap_bonus_cap_s()` in migration 009). A *fair run* ignores upgrades (15 s, base goog per tap) and has its own leaderboard next to the *with upgrades* one; the best run per player is kept. The server limits the taps to 12 per second over the longest possible run, so a bot at that speed can still score, but nothing higher.
 
 ## Daily bonus and rescue
 - **Daily bonus:** 25 goog on the first login of each calendar day (Berlin time).
@@ -111,4 +113,4 @@ The anon key in `config.js` is public by design. Row Level Security lets the bro
 - `stats.js`: profile stats, achievements, challenges panel, weekly leaderboard, admin returns
 - `config.js`: your Supabase URL and anon key
 - `assets/`: coin, favicon, `cats/` (slotcat_1–6, plink, drooling_cat)
-- `supabase/`: `schema.sql`, `migration-002` … `migration-008`
+- `supabase/`: `schema.sql`, `migration-002` … `migration-009`

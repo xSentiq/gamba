@@ -635,10 +635,68 @@
   // The server (migration 007) decides the round length, limits the taps it will count.
   // =====================================================================
   const TAP_FREE_MS = 15000;
+  const TAP_BONUS_MS = 100, TAP_BONUS_CAP_MS = 30000;               // every tap gives 0.1 s back, up to 30 s per run (the server limits the taps the same way)
   let tapTimer = null, tapEnd = 0, tapScore = 0, tapBest = 0, tapMs = TAP_FREE_MS, tapStreak = 0, tapLastAt = 0, tapStarting = false, tapInfoData = null;
+  let tapArmed = false, tapBonus = 0, tapMode = "up", tapBoardMode = "fair";
   let tapEarning = false;                                            // is the current round a server round?
-  try { tapBest = Number(localStorage.getItem("goog_tap_best")) || 0; } catch (_) {}
-  $("g-best").textContent = tapBest;
+  try { tapBest = Number(localStorage.getItem("goog_tap_best")) || 0; tapMode = localStorage.getItem("goog_tap_mode") === "fair" ? "fair" : "up"; } catch (_) {}
+  const tapBusy = () => !!(tapTimer || tapArmed || tapStarting);
+  const tapBaseSeconds = () => (tapInfoData && G.loggedIn() ? (tapMode === "fair" ? tapInfoData.fair_seconds || 15 : tapInfoData.seconds) : TAP_FREE_MS / 1000);
+  function tapShowBest() {
+    const b = tapInfoData && G.loggedIn() && tapInfoData.best ? tapInfoData.best[tapMode] : tapBest;
+    $("g-best").textContent = b || 0;
+  }
+  function tapIdleTime() { $("g-time").textContent = tapBaseSeconds().toFixed(1); }
+  function renderTapMode() {
+    const box = $("tap-mode");
+    box.hidden = !(tapInfoData && G.loggedIn());
+    box.querySelectorAll("[data-tmode]").forEach((b) => { b.setAttribute("aria-pressed", String(b.dataset.tmode === tapMode)); b.disabled = tapBusy(); });
+    tapShowBest();
+    if (!tapBusy()) tapIdleTime();
+  }
+  (function bindTapControls() {
+    document.querySelectorAll("[data-tmode]").forEach((b) => b.addEventListener("click", () => {
+      if (tapBusy()) return;
+      tapMode = b.dataset.tmode;
+      try { localStorage.setItem("goog_tap_mode", tapMode); } catch (_) {}
+      renderTapMode();
+    }));
+    document.querySelectorAll("[data-tbmode]").forEach((b) => b.addEventListener("click", () => { tapBoardMode = b.dataset.tbmode; loadTapBoard(); }));
+  })();
+  tapShowBest();
+
+  async function loadTapBoard() {
+    const body = $("tap-board-body"), status = $("tap-board-status");
+    document.querySelectorAll("[data-tbmode]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tbmode === tapBoardMode)));
+    $("tap-board-sub").textContent = tapBoardMode === "fair"
+      ? "Best run per player. Fair runs ignore upgrades, so everyone has the same 15 seconds."
+      : "Best run per player with upgrades (longer rounds).";
+    if (!G.loggedIn()) { body.replaceChildren(); return G.setStatus(status, "Log in to see the leaderboard."); }
+    G.setStatus(status, "Loading…");
+    try {
+      const r = await rpc("tap_board", { p_mode: tapBoardMode });
+      if (r.mode !== tapBoardMode) return;
+      body.replaceChildren();
+      const me = G.me();
+      r.rows.forEach((row, i) => {
+        const tr = document.createElement("tr");
+        if (i < 3) tr.classList.add("top3");
+        if (me && row.id === me.id) tr.classList.add("me");
+        const who = document.createElement("td"), wrap = document.createElement("div"); wrap.className = "who";
+        const nm = document.createElement("span"); nm.textContent = row.username;
+        wrap.append(G.makeAvatar(row, "sm"), nm); who.appendChild(wrap);
+        const rank = document.createElement("td"); rank.textContent = String(i + 1);
+        const n = document.createElement("td"); n.className = "num"; n.textContent = fmt.format(row.taps);
+        tr.append(rank, who, n);
+        body.appendChild(tr);
+      });
+      const mine = r.my_best ? "Your best: " + r.my_best + " (rank " + r.my_rank + ")." : "You have no run here yet.";
+      G.setStatus(status, r.rows.length ? mine : "Nobody has a run here yet. Be the first.");
+    } catch (e) {
+      body.replaceChildren();
+      G.setStatus(status, /Could not find|does not exist|schema cache/i.test(e.message || "") ? "Not available yet: the site owner still has to run migration 009." : e.message, "error");
+    }
+  }
 
   function moveTarget() {
     const arena = $("arena"), t = $("g-target");
@@ -655,8 +713,8 @@
     const d = tapInfoData, shop = $("tap-shop");
     shop.hidden = !(d && G.loggedIn());
     $("tap-sub").textContent = d && G.loggedIn()
-      ? "Tap the cat as often as you can before time runs out. Taps earn a small amount of goog; upgrades add time and pay more per tap."
-      : "Tap the cat as often as you can before time runs out. Log in to earn a tiny amount of goog and buy upgrades.";
+      ? "Tap the cat as often as you can. The clock starts with your first tap and every tap gives you 0.1 s back. Taps earn a small amount of goog; upgrades add time and pay more per tap. Pick a fair run to score without upgrades."
+      : "Tap the cat as often as you can. The clock starts with your first tap and every tap gives you 0.1 s back. Log in to earn a tiny amount of goog, buy upgrades and join the leaderboard.";
     if (shop.hidden) return;
     $("tap-today").textContent = "Earned today: " + d.earned_today + " goog. Progress to the next goog: " + (d.carry_milli / 10).toFixed(0) + "%.";
     const box = $("tap-upgrades");
@@ -673,7 +731,7 @@
       txt.append(t, pips, n);
       const btn = document.createElement("button"); btn.type = "button"; btn.className = "btn small"; btn.setAttribute("data-nosound", "");
       if (u.cost === null) { btn.textContent = "Max level"; btn.disabled = true; }
-      else { btn.textContent = "Buy for " + fmt.format(u.cost); btn.disabled = !!tapTimer || (me && me.goog < u.cost); }
+      else { btn.textContent = "Buy for " + fmt.format(u.cost); btn.disabled = tapBusy() || (me && me.goog < u.cost); }
       btn.onclick = () => buyTap(kind, btn);
       row.append(txt, btn);
       box.appendChild(row);
@@ -681,88 +739,102 @@
   }
   async function loadTapInfo() {
     if (!G.loggedIn()) { tapInfoData = null; renderTapShop(); return; }
-    try { tapInfoData = await rpc("tap_info"); $("g-time").textContent = tapInfoData.seconds.toFixed(1); }
+    try { tapInfoData = await rpc("tap_info"); }
     catch (e) { tapInfoData = null; }                                // migration 007 not run yet: plain free play
-    renderTapShop();
+    if (tapInfoData && !tapInfoData.best) tapMode = "up";            // migration 009 not run yet: no fair runs
+    renderTapShop(); renderTapMode();
   }
   async function buyTap(kind, btn) {
-    if (tapTimer) return;
+    if (tapBusy()) return;
     btn.disabled = true;
     try {
       const r = await rpc("tap_buy", { p_kind: kind });
       tapInfoData = r.info; fx("buy");
       applyBalance(r);
-      $("g-time").textContent = tapInfoData.seconds.toFixed(1);
       setMsg("g-msg", "Upgrade bought.", "ok");
     } catch (e) { fx("deny"); setMsg("g-msg", e.message, "error"); }
-    renderTapShop();
+    renderTapShop(); renderTapMode();
   }
 
+  // Pressing Start only gets the round ready; the clock starts with the first tap.
   async function tapStart() {
-    if (tapStarting || tapTimer) return;
+    if (tapBusy()) return;
     tapStarting = true;
     $("g-start").disabled = true;
     try {
       tapEarning = false; tapMs = TAP_FREE_MS;
       if (G.loggedIn() && tapInfoData) {
-        try { const r = await rpc("tap_start"); tapMs = r.seconds * 1000; tapEarning = true; }
-        catch (e) { setMsg("g-msg", e.message + " Playing without earnings.", "error"); }
+        try {
+          const r = await rpc("tap_start", tapInfoData.best ? { p_mode: tapMode } : {});
+          tapMs = r.seconds * 1000; tapEarning = true;
+        } catch (e) { setMsg("g-msg", e.message + " Playing without earnings.", "error"); }
       }
-      tapScore = 0; tapStreak = 0; tapLastAt = 0;
+      tapScore = 0; tapStreak = 0; tapLastAt = 0; tapBonus = 0;
       $("g-score").textContent = 0; $("g-streak").textContent = 0;
+      $("g-time").textContent = (tapMs / 1000).toFixed(1);
       $("g-start").hidden = true;
       $("g-target").hidden = false;
-      if (tapEarning) setMsg("g-msg", "");
-      tapEnd = performance.now() + tapMs;
+      tapArmed = true;
+      setMsg("g-msg", "Tap the cat to start the clock.");
       fx("start");
       moveTarget();
-      renderTapShop();
-      tapTimer = setInterval(() => {
-        const left = Math.max(0, tapEnd - performance.now());
-        $("g-time").textContent = (left / 1000).toFixed(1);
-        if (left <= 0) tapFinish();
-      }, 100);
+      renderTapShop(); renderTapMode();
     } finally { tapStarting = false; $("g-start").disabled = false; }
+  }
+  function tapRun() {                                                // the first tap: the clock starts now
+    tapArmed = false;
+    tapEnd = performance.now() + tapMs;
+    setMsg("g-msg", "");
+    tapTimer = setInterval(() => {
+      const left = Math.max(0, tapEnd - performance.now());
+      $("g-time").textContent = (left / 1000).toFixed(1);
+      if (left <= 0) tapFinish();
+    }, 100);
   }
   function tapStop() {
     clearInterval(tapTimer);
-    tapTimer = null;
+    tapTimer = null; tapArmed = false;
     $("g-target").hidden = true;
     $("g-start").hidden = false;
     $("g-start").textContent = "Start";
-    $("g-time").textContent = ((tapInfoData && G.loggedIn() ? tapInfoData.seconds * 1000 : TAP_FREE_MS) / 1000).toFixed(1);
+    tapIdleTime();
+    renderTapMode();
   }
   async function tapFinish() {
-    const earning = tapEarning, score = tapScore;
+    const earning = tapEarning, score = tapScore, mode = tapMode;
     tapStop();
     tapEarning = false;
     $("g-start").textContent = "Play again";
     let msg = "Time's up. You tapped " + score + " time" + (score === 1 ? "" : "s") + ".";
-    if (score > tapBest) {
+    const guestBest = score > tapBest;
+    if (guestBest) {
       tapBest = score;
-      $("g-best").textContent = tapBest;
       try { localStorage.setItem("goog_tap_best", String(tapBest)); } catch (_) {}
-      msg += " New best!";
     }
     if (earning) {
       try {
         const r = await rpc("tap_finish", { p_taps: score });
         tapInfoData = r.info;
+        if (r.new_best) msg += " New best" + (r.mode === "fair" ? " for fair runs" : "") + "!";
         if (r.paid > 0) { msg += " You earned " + r.paid + " goog."; fx("coin"); if (window.Fx) { window.Fx.pulseBalance(); } }
         else msg += " That adds up to part of a goog; it carries over.";
         applyBalance(r);
+        if (r.mode) { tapBoardMode = r.mode; loadTapBoard(); }
       } catch (e) { msg += " (Could not save the round: " + e.message + ")"; }
       renderTapShop();
-    }
+    } else if (guestBest) msg += " New best!";
+    renderTapMode();
     setMsg("g-msg", msg, "ok");
   }
   $("g-start").onclick = tapStart;
   $("g-target").addEventListener("pointerdown", (e) => {
     e.preventDefault();
-    if (!tapTimer) return;
+    if (!tapTimer && !tapArmed) return;
+    if (tapArmed) tapRun();
     const now = performance.now();
     tapStreak = now - tapLastAt < 450 ? tapStreak + 1 : 1; tapLastAt = now;   // cosmetic streak: taps in quick succession
     tapScore += 1;
+    if (tapBonus < TAP_BONUS_CAP_MS) { const add = Math.min(TAP_BONUS_MS, TAP_BONUS_CAP_MS - tapBonus); tapBonus += add; tapEnd += add; }
     $("g-score").textContent = tapScore;
     $("g-streak").textContent = tapStreak;
     fx("pop", Math.min(tapStreak, 14));
@@ -797,7 +869,7 @@
     PANELS.forEach((p) => ($("game-" + p).hidden = p !== activeSub));
     leave();
     applyGates();
-    if (activeSub === "tap") loadTapInfo();
+    if (activeSub === "tap") { loadTapInfo(); loadTapBoard(); }
     if (!G.loggedIn()) { renderMines(null); crashIdle(); return; }
     if (plugins[activeSub]) plugins[activeSub].show();
     if (activeSub === "mines") minesResume();
