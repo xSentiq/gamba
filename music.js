@@ -226,6 +226,11 @@
   window.addEventListener("pointerdown", first, true);
   window.addEventListener("keydown", first, true);
 
+  // if the browser left the audio suspended (it can after a reload or a long background stretch), the next click or key press wakes it up
+  const wake = () => { try { if (S.on && S.c && S.c.state !== "running") S.c.resume().catch(() => {}); } catch (e) {} };
+  window.addEventListener("pointerdown", wake, true);
+  window.addEventListener("keydown", wake, true);
+
   // keep playing in the background: nothing is stopped or restarted, the schedule just runs further ahead while hidden
   document.addEventListener("visibilitychange", () => {
     if (!S.on) return;
