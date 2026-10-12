@@ -162,6 +162,7 @@
         const AC = window.AudioContext || window.webkitAudioContext;
         if (!AC) return false;
         S.c = new AC(); S.G = makeGraph(S.c);
+        S.c.onstatechange = () => { if (!document.hidden) revive(); };
       }
       if (S.c.state === "suspended") S.c.resume().catch(() => {});
       const now = S.c.currentTime;
@@ -226,15 +227,28 @@
   window.addEventListener("pointerdown", first, true);
   window.addEventListener("keydown", first, true);
 
-  // if the browser left the audio suspended (it can after a reload or a long background stretch), the next click or key press wakes it up
-  const wake = () => { try { if (S.on && S.c && S.c.state !== "running") S.c.resume().catch(() => {}); } catch (e) {} };
-  window.addEventListener("pointerdown", wake, true);
-  window.addEventListener("keydown", wake, true);
+  // If the browser suspended the audio (it can when the tab is switched away and back), wake it up; if it will not wake,
+  // build a fresh audio context instead of staying silent.
+  function revive() {
+    if (!S.on || !S.c || S.c.state === "running") return;
+    try { S.c.resume().catch(() => {}); } catch (e) {}
+    clearTimeout(S.reviveTimer);
+    S.reviveTimer = setTimeout(() => {
+      if (!S.on || !S.c || S.c.state === "running") return;
+      const old = S.c;
+      S.on = false; clearInterval(S.timer); S.c = null; S.G = null;
+      try { old.close(); } catch (e) {}
+      start(); paint();
+    }, 400);
+  }
+  window.addEventListener("pointerdown", revive, true);
+  window.addEventListener("keydown", revive, true);
+  window.addEventListener("pageshow", revive);
 
   // keep playing in the background: nothing is stopped or restarted, the schedule just runs further ahead while hidden
   document.addEventListener("visibilitychange", () => {
     if (!S.on) return;
-    try { if (S.c && S.c.state === "suspended") S.c.resume().catch(() => {}); } catch (e) {}
+    revive();
     tick();
   });
 
