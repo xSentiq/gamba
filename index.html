@@ -577,6 +577,7 @@
         <button id="atab-players" type="button" role="tab" aria-selected="true">Players</button>
         <button id="atab-drawings" type="button" role="tab" aria-selected="false">Drawings</button>
         <button id="atab-returns" type="button" role="tab" aria-selected="false">Returns</button>
+        <button id="atab-rig" type="button" role="tab" aria-selected="false">Rig</button>
         <button id="atab-log" type="button" role="tab" aria-selected="false">Log</button>
       </div>
 
@@ -621,12 +622,31 @@
         </div>
       </div>
 
+      <div id="apanel-rig" hidden>
+        <p class="sub">Force the outcome of a player's next rounds. The rule is used up round by round (Mines and Tower: per box or tile opened). Rigged rounds are marked and left out of the Returns table. Every rule is written to the Log.</p>
+        <form id="rig-form" class="rig-form">
+          <label>Player <input id="rig-user" type="text" placeholder="exact username" autocomplete="off" required></label>
+          <label>Game <select id="rig-game"></select></label>
+          <label>Outcome <select id="rig-preset"></select></label>
+          <label id="rig-param-wrap" hidden><span id="rig-param-label">Value</span> <input id="rig-param" type="number" step="any"></label>
+          <label>Rounds <input id="rig-uses" type="number" min="1" max="1000" value="1"></label>
+          <button class="btn" type="submit">Add rig</button>
+        </form>
+        <div class="ledger-wrap">
+          <table class="ledger admin-table">
+            <thead><tr><th scope="col">Player</th><th scope="col">Game</th><th scope="col">Outcome</th><th scope="col" class="num">Left</th><th scope="col">Last used</th><th scope="col"></th></tr></thead>
+            <tbody id="admin-rigs"></tbody>
+          </table>
+        </div>
+      </div>
+
       <div id="apanel-log" hidden>
         <ul id="admin-log" class="log-list"></ul>
       </div>
       <p id="admin-msg" class="status" role="status"></p>
     </section>
   </main>
+  <footer class="site-foot"><a href="#disclaimer">Disclaimer</a></footer>
 
   <!-- Draw a cat -->
   <dialog id="draw-dialog" class="draw-dialog" aria-labelledby="draw-title">

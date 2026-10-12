@@ -29,7 +29,7 @@ body { background: var(--bg, var(--paper)); }
 .right { margin-left: auto; flex-wrap: nowrap; }
 .balance { background: linear-gradient(180deg, color-mix(in srgb, var(--gold) 20%, var(--surface)), var(--surface)); border: 1px solid color-mix(in srgb, var(--gold) 70%, transparent); color: var(--ink); font-weight: 800; box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 10%, transparent); white-space: nowrap; }
 .theme-btn { background: var(--surface); }
-#nav-disclaimer { display: none; }
+#nav-disclaimer { font-size: .9rem; }
 
 /* buttons: chunky green, glow and a pressed state */
 .btn { background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%); color: var(--on-accent); border-radius: 12px; font-weight: 800; letter-spacing: .01em; box-shadow: 0 3px 0 color-mix(in srgb, var(--accent-2) 60%, #000), 0 8px 18px color-mix(in srgb, var(--accent) 30%, transparent); }
@@ -87,7 +87,9 @@ form input:focus, .controls input[type=number]:focus { outline: 2px solid var(--
 /* bottom tab bar on phones */
 @media (max-width: 720px) {
   body { padding-bottom: 4.6rem; }
-  #nav-disclaimer, .brand { font-size: 1.15rem; }
+  .brand { font-size: 1.15rem; }
+  #nav-disclaimer { display: none; }                      /* on phones the link sits in the footer instead */
+  .site-foot { display: block; }
   .brand .goog-icon.xl { width: 1.8rem; height: 1.8rem; }
   #logout { white-space: nowrap; padding: .3rem .2rem; font-size: .85rem; }
   .top #music-toggle, .top #sound-toggle { width: 2rem; height: 2rem; }
@@ -116,3 +118,7 @@ form input:focus, .controls input[type=number]:focus { outline: 2px solid var(--
 @keyframes fx-pop { 0% { transform: translate(-50%,-50%) scale(.3) rotate(-4deg); } 100% { transform: translate(-50%,-50%) scale(1) rotate(0); } }
 .fx-float { color: var(--gold); font-size: 1.5rem; }
 @media (prefers-reduced-motion: reduce) { #fx-banner::before { animation: none; } #fx-banner.show { animation: none; } }
+
+/* footer disclaimer link (phones only; the header has it on larger screens) */
+.site-foot { display: none; text-align: center; padding: 1.2rem 1rem 0; font-size: .85rem; }
+.site-foot a { color: var(--muted); }

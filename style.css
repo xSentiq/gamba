@@ -447,3 +447,9 @@ button, a, label.btn, input[type="range"], select, summary { touch-action: manip
 .admin-table td:first-child { white-space: nowrap; }
 
 .theme-btn.off { opacity: .5; }
+
+/* admin: rigging form */
+.rig-form { display: flex; flex-wrap: wrap; gap: .6rem .8rem; align-items: flex-end; margin-bottom: 1rem; }
+.rig-form label { display: grid; gap: .25rem; font-weight: 600; font-size: .9rem; margin: 0; }
+.rig-form input, .rig-form select { padding: .5rem .6rem; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 6px; min-width: 8rem; }
+.rig-form input[type=number] { width: 8rem; min-width: 0; }
