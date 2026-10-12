@@ -89,7 +89,6 @@ form input:focus, .controls input[type=number]:focus { outline: 2px solid var(--
   body { padding-bottom: 4.6rem; }
   .brand { font-size: 1.15rem; }
   #nav-disclaimer { display: none; }                      /* on phones the link sits in the footer instead */
-  .site-foot { display: block; }
   .brand .goog-icon.xl { width: 1.8rem; height: 1.8rem; }
   #logout { white-space: nowrap; padding: .3rem .2rem; font-size: .85rem; }
   .top #music-toggle, .top #sound-toggle { width: 2rem; height: 2rem; }
@@ -122,3 +121,4 @@ form input:focus, .controls input[type=number]:focus { outline: 2px solid var(--
 /* footer disclaimer link (phones only; the header has it on larger screens) */
 .site-foot { display: none; text-align: center; padding: 1.2rem 1rem 0; font-size: .85rem; }
 .site-foot a { color: var(--muted); }
+@media (max-width: 720px) { .site-foot { display: block; } }
