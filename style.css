@@ -445,3 +445,5 @@ button, a, label.btn, input[type="range"], select, summary { touch-action: manip
 .verdict.warn { color: var(--brass); font-weight: 600; }
 .verdict.muted { color: var(--muted); }
 .admin-table td:first-child { white-space: nowrap; }
+
+.theme-btn.off { opacity: .5; }
