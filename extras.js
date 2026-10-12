@@ -178,7 +178,7 @@
 
   // ---------- admin panel ----------
   const A = { tab: "players", q: "", filter: "pending" };
-  const TABS = ["players", "drawings", "returns", "log"];
+  const TABS = ["players", "drawings", "returns", "rig", "log"];
   const msg = (t, k) => setMsg("admin-msg", t, k);
   const when = (iso) => new Date(iso).toLocaleString("en-GB", { dateStyle: "short", timeStyle: "short" });
 
@@ -207,6 +207,7 @@
     if (A.tab === "players") return loadUsers();
     if (A.tab === "drawings") return loadDrawings();
     if (A.tab === "returns") return window.GoogStats ? window.GoogStats.adminReturns(msg) : undefined;
+    if (A.tab === "rig") return loadRigs();
     return loadLog();
   }
 
@@ -301,6 +302,72 @@
     document.querySelectorAll("[data-dfilter]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
     loadDrawings();
   }));
+
+  // ---------- rigging (migration 010) ----------
+  const RIG = {
+    dice:     { label: "Dice",     presets: { win: ["Win"], lose: ["Lose"] } },
+    crash:    { label: "Crash",    presets: { point: ["Crash at a multiplier", "Multiplier (1.00 to 1000)", 1, 1000, 2] } },
+    roulette: { label: "Roulette", presets: { number: ["Land on a number", "Number (0 to 36)", 0, 36, 0] } },
+    plinko:   { label: "Plinko",   presets: { slot: ["Land in a slot", "Slot (0 = far left, up to the number of rows)", 0, 16, 0] } },
+    slots:    { label: "Slots",    presets: { lose: ["Dead spin"], win: ["Line win"], big: ["Big line win (5x total bet or more)"], free: ["Free games (3+ scatters)"] } },
+    mines:    { label: "Mines",    presets: { safe: ["Every box safe"], bomb: ["Next box is a cucumber"] } },
+    tower:    { label: "Tower",    presets: { safe: ["Every tile safe"], bomb: ["Next tile is a trap"] } },
+    scratch:  { label: "Scratch",  presets: { lose: ["Losing card"], win: ["Winning card"], jackpot: ["Jackpot (500x)"] } },
+  };
+  function rigFill() {
+    const g = $("rig-game"), p = $("rig-preset");
+    if (!g.options.length) Object.keys(RIG).forEach((k) => g.add(new Option(RIG[k].label, k)));
+    p.replaceChildren();
+    const presets = RIG[g.value].presets;
+    Object.keys(presets).forEach((k) => p.add(new Option(presets[k][0], k)));
+    rigParam();
+  }
+  function rigParam() {
+    const d = RIG[$("rig-game").value].presets[$("rig-preset").value];
+    const wrap = $("rig-param-wrap");
+    wrap.hidden = !d[1];
+    if (d[1]) { $("rig-param-label").textContent = d[1]; $("rig-param").min = d[2]; $("rig-param").max = d[3]; $("rig-param").required = true; if (!$("rig-param").value) $("rig-param").value = d[2] === 1 ? 10 : d[2]; }
+    else { $("rig-param").required = false; $("rig-param").value = ""; }
+  }
+  $("rig-game").addEventListener("change", rigFill);
+  $("rig-preset").addEventListener("change", rigParam);
+  async function loadRigs() {
+    rigFill();
+    const body = $("admin-rigs");
+    try {
+      const rows = await rpc("admin_rig_list", { p_limit: 60 });
+      body.replaceChildren();
+      if (!rows.length) { const tr = document.createElement("tr"), td = document.createElement("td"); td.colSpan = 6; td.textContent = "No rules yet."; tr.appendChild(td); body.appendChild(tr); return; }
+      rows.forEach((r) => {
+        const tr = document.createElement("tr");
+        const cell = (t, c) => { const td = document.createElement("td"); if (c) td.className = c; td.textContent = t; return td; };
+        const what = ((RIG[r.game] && RIG[r.game].presets[r.preset] && RIG[r.game].presets[r.preset][0]) || r.preset) + (r.param !== null ? " (" + r.param + ")" : "");
+        const act = document.createElement("td");
+        if (r.uses_left > 0) {
+          const b = document.createElement("button"); b.type = "button"; b.className = "btn small"; b.textContent = "Cancel"; b.setAttribute("data-nosound", "");
+          b.onclick = async () => { try { await rpc("admin_rig_clear", { p_id: r.id }); loadRigs(); } catch (e) { msg(e.message, "error"); } };
+          act.appendChild(b);
+        }
+        tr.append(cell(r.username), cell((RIG[r.game] || {}).label || r.game), cell(what), cell(r.uses_left + " / " + r.uses_total, "num"), cell(r.last_used ? when(r.last_used) : "–"), act);
+        if (r.uses_left === 0) tr.style.opacity = ".55";
+        body.appendChild(tr);
+      });
+    } catch (e) { msg(/Could not find|does not exist|schema cache/i.test(e.message || "") ? "Not available yet: migration 010 has not been run." : e.message, "error"); }
+  }
+  $("rig-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const name = $("rig-user").value.trim();
+    try {
+      msg("");
+      const users = await rpc("admin_list_users", { p_search: name, p_limit: 50, p_offset: 0 });
+      const u = users.find((x) => x.username.toLowerCase() === name.toLowerCase());
+      if (!u) throw new Error("No player with exactly that username.");
+      const d = RIG[$("rig-game").value].presets[$("rig-preset").value];
+      await rpc("admin_rig_set", { p_user: u.id, p_game: $("rig-game").value, p_preset: $("rig-preset").value, p_param: d[1] ? Number($("rig-param").value) : null, p_uses: Math.floor(Number($("rig-uses").value)) || 1 });
+      msg("Rig added for " + u.username + ".", "ok");
+      loadRigs();
+    } catch (err) { msg(err.message, "error"); }
+  });
 
   async function loadLog() {
     const ul = $("admin-log");
