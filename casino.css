@@ -8,13 +8,13 @@
 :root[data-theme="dark"] {
   --paper: #0A1020; --bg: radial-gradient(120% 60% at 50% -10%, #17264A 0%, #0A1020 55%) fixed, #0A1020;
   --surface: #131D35; --ink: #EAF0FF; --muted: #8A99BA; --line: #243252;
-  --brass: #FFC531; --teal: #22E27A; --error: #FF5A6E;
+  --brass: #FFC531; --gold: #FFC531; --teal: #22E27A; --error: #FF5A6E;
   --accent: #22E27A; --accent-2: #12B35B; --on-accent: #04200F;
   --cardboard: #3B4F7C; --cardboard-dark: #25365C;
 }
 /* the gambled background color still wins: tint the navy with the account's hue */
 :root[data-hue] { --bg: linear-gradient(160deg, hsl(var(--hue) 90% 97%), hsl(var(--hue) 80% 92%)) fixed; --paper: hsl(var(--hue) 90% 95%); --surface: hsl(var(--hue) 70% 99%); --line: hsl(var(--hue) 40% 84%); --ink: hsl(var(--hue) 40% 11%); --muted: hsl(var(--hue) 18% 36%); --brass: #E0A100; }
-:root[data-hue][data-theme="dark"] { --bg: radial-gradient(120% 60% at 50% -10%, hsl(var(--hue) 50% 20%) 0%, hsl(var(--hue) 45% 8%) 58%) fixed, hsl(var(--hue) 45% 8%); --paper: hsl(var(--hue) 40% 8%); --surface: hsl(var(--hue) 30% 14%); --line: hsl(var(--hue) 24% 26%); --ink: hsl(var(--hue) 40% 94%); --muted: hsl(var(--hue) 20% 72%); --brass: #FFC531; }
+:root[data-hue][data-theme="dark"] { --bg: radial-gradient(120% 60% at 50% -10%, hsl(var(--hue) 50% 20%) 0%, hsl(var(--hue) 45% 8%) 58%) fixed, hsl(var(--hue) 45% 8%); --paper: hsl(var(--hue) 40% 8%); --surface: hsl(var(--hue) 30% 14%); --line: hsl(var(--hue) 24% 26%); --ink: hsl(var(--hue) 40% 94%); --muted: hsl(var(--hue) 20% 72%); --brass: #FFC531; --gold: #FFC531; }
 body { background: var(--bg, var(--paper)); }
 @media (prefers-reduced-motion: no-preference) {
   main > section:not([hidden]) { animation: ui-in .28s ease-out; }
