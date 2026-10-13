@@ -1,0 +1,40 @@
+/* Palette: graphite #292929 and pastel pink #C88E9B */
+:root {
+  --graphite: #292929; --pink: #C88E9B; --pink-deep: #A96F7D; --pink-soft: #F3E4E8; --pink-mist: #FAF3F5;
+  --paper: var(--pink-mist); --surface: #FFFFFF; --ink: var(--graphite); --muted: #6E5F64; --line: #E6D2D8;
+  --brass: var(--pink-deep); --teal: #4E8C78; --error: #B5424F;
+  --bg: linear-gradient(160deg, #FDF8F9 0%, #F6E8EC 100%);
+  --cardboard: #D9B3BC; --cardboard-dark: #B98896;
+}
+:root[data-theme="dark"] {
+  --paper: #292929; --surface: #333031; --ink: #F5EBEE; --muted: #B9A3AA; --line: #4A4345;
+  --brass: var(--pink); --teal: #86C2AC; --error: #F08A96;
+  --bg: linear-gradient(160deg, #242424 0%, #292929 55%, #33292C 100%);
+  --cardboard: #6B4F58; --cardboard-dark: #4A3640;
+}
+/* the gambled background color still wins when one is set (rules in style.css), but keep the pink accent */
+:root[data-hue] { --brass: var(--pink-deep); }
+:root[data-hue][data-theme="dark"] { --brass: var(--pink); }
+
+/* buttons: pink on graphite text */
+.btn { background: var(--pink); color: var(--graphite); }
+.btn:hover { opacity: 1; filter: brightness(1.06); }
+:root[data-theme="dark"] .btn { background: var(--pink); color: var(--graphite); }
+.btn.alt { background: var(--graphite); color: var(--pink); box-shadow: inset 0 0 0 2px var(--pink); }
+:root[data-theme="dark"] .btn.alt { background: transparent; color: var(--pink); }
+.seg button[aria-pressed="true"] { background: var(--pink); color: var(--graphite); }
+.toast { background: var(--graphite); color: #F5EBEE; }
+.toast.ok { background: var(--teal); color: var(--graphite); }
+.toast.ach { background: var(--pink); color: var(--graphite); }
+.balance { border-color: var(--pink); }
+.rescue-bar { background: color-mix(in srgb, var(--pink) 28%, var(--paper)); border-bottom-color: var(--pink); }
+#nav a[aria-current="page"] { box-shadow: inset 0 -3px 0 var(--pink); }
+.target { box-shadow: 0 0 0 3px var(--pink); }
+.pbar span { background: var(--pink); }
+.challenge.done .pbar span { background: var(--teal); }
+:focus-visible { outline-color: var(--pink); }
+input[type=range], .controls input[type=range] { accent-color: var(--pink); }
+.card, .hub-card, .ledger-wrap { border-color: var(--line); }
+.hub-card:hover { border-color: var(--pink); }
+#fx-banner .fx-title { color: var(--pink); }
+#fx-banner.tier4 .fx-title { background: linear-gradient(90deg, #C88E9B, #F3E4E8, #A96F7D, #E3B7C0, #C88E9B); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }

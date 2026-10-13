@@ -115,4 +115,5 @@ The anon key in `config.js` is public by design. Row Level Security lets the bro
 - `config.js`: your Supabase URL and anon key
 - `assets/`: coin, favicon, `cats/` (slotcat_1–6, plink, drooling_cat)
 - **Admin rig tab** (migration 010): an admin can force the outcome of a player's next rounds (Dice win/lose, Crash at x, Roulette number, Plinko slot, Slots dead/win/big/free games, Mines/Tower safe or bomb, Scratch lose/win/jackpot). Rules are used up per round and written to the admin log. Rigged rounds are marked in the play log and left out of the Returns table.
+- `palette.css`: the graphite `#292929` and pastel pink `#C88E9B` color palette, loaded after `style.css` (delete the link in `index.html` to go back to the old colors)
 - `supabase/`: `schema.sql`, `migration-002` … `migration-010`

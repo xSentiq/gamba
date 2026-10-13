@@ -120,7 +120,7 @@
   // Visual effects
   // =====================================================================
   let canvas = null, c2 = null, parts = [], raf = 0, sprite = null;
-  const COLORS = ["#FFC83D", "#FF6B6B", "#4ECDC4", "#B66BFF", "#6BCB77", "#FF9F43", "#54A0FF"];
+  const COLORS = ["#C88E9B", "#E3B7C0", "#F3E4E8", "#FFFFFF", "#A96F7D", "#D9A5B1", "#F5EBEE"];
 
   function ensureCanvas() {
     if (canvas) return true;
