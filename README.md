@@ -68,7 +68,6 @@ Every settled round of the 8 games is written to `game_plays` by the same server
 ## Look and extras
 - **Light / dark mode:** button in the top bar (white light mode, purple dark mode), remembered per device.
 - **Background color:** Profile → Background color. 1 goog buys a random color (a hue stored on your account, applied in both modes); "Back to default" is free. Price: `bg_color_price()` in migration 006.
-- **Music:** an original, mellow elevator-style bossa loop (electric piano, vibraphone, soft bass, shaker), synthesized in the browser (`music.js`, no audio files). It starts after the first click or key press; the 🎵 button in the top bar switches it off and the choice is remembered. It ducks while a big win is celebrated.
 - **Disclaimer:** link at the top right. Edit the text in `index.html` (`#view-disclaimer`).
 
 ## Sound and animations (branch `sound-fx`)
@@ -110,7 +109,6 @@ The anon key in `config.js` is public by design. Row Level Security lets the bro
 - `games.js`: Mines, Crash, Dice, Plinko, Tap
 - `games2.js`: slots, tower, roulette, scratch cards
 - `extras.js`: daily bonus, rescue drawing, admin panel
-- `music.js`: background music
 - `stats.js`: profile stats, achievements, challenges panel, weekly leaderboard, admin returns
 - `config.js`: your Supabase URL and anon key
 - `assets/`: coin, favicon, `cats/` (slotcat_1–6, plink, drooling_cat)

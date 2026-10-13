@@ -252,7 +252,6 @@
       emit(90, cx * 0.6, cy, { angle: -Math.PI / 3, speed: 15, coins: 0.3 });
       emit(90, cx * 1.4, cy, { angle: -Math.PI * 2 / 3, speed: 15, coins: 0.3 });
       shake(tier >= 4);
-      if (window.Music) window.Music.duck(3500);                         // the music steps back for the big win
       banner(tier >= 4 ? "MEGA WIN" : "BIG WIN", net, tier);
     }
     if (tier >= 4) {
