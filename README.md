@@ -19,6 +19,7 @@ A small website with accounts, a `goog` currency (everyone starts with 100, the 
    7. `supabase/migration-008-stats-achievements.sql` (play log, stats, achievements, daily/weekly challenges, weekly leaderboard)
    8. `supabase/migration-009-tap-leaderboard.sql` (Tap the goog leaderboard, fair runs, time back per tap)
    9. `supabase/migration-010-admin-rig.sql` (admin rigging: forced outcomes per player and game)
+  10. `supabase/migration-012-multi-bet-check.sql` (bulk Cat Drop and scratch cards need the whole stake up front)
 
    Only if you ran an old `schema.sql` from before profile pictures existed: run `migration-002-avatars.sql` first.
 3. Open **Project Settings → API** and copy the *Project URL* and the *anon public* key into `config.js`.
@@ -113,4 +114,4 @@ The anon key in `config.js` is public by design. Row Level Security lets the bro
 - `config.js`: your Supabase URL and anon key
 - `assets/`: coin, favicon, `cats/` (slotcat_1–6, plink, drooling_cat)
 - **Admin rig tab** (migration 010): an admin can force the outcome of a player's next rounds (Dice win/lose, Crash at x, Roulette number, Plinko slot, Slots dead/win/big/free games, Mines/Tower safe or bomb, Scratch lose/win/jackpot). Rules are used up per round and written to the admin log. Rigged rounds are marked in the play log and left out of the Returns table.
-- `supabase/`: `schema.sql`, `migration-002` … `migration-010`
+- `supabase/`: `schema.sql`, `migration-002` … `migration-012`
